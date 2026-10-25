@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>K1 Odometry Runs</title>
+<style>
+:root {
+  --bg: #f6f6f3; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6b66; --line: #e2e1dc; --grid: #ecebe6;
+  --accent: #1d1d1b; --sel: #eef2fb;
+  --booster: #d6453d; --sole: #2f6fde; --lowest: #8fb6ef; --truth: #1d1d1b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151514; --panel: #1e1e1c; --ink: #ecebe6; --muted: #9a9993; --line: #33332f; --grid: #2a2a27;
+    --sel: #25304a; --booster: #ff6b5f; --sole: #6b9cff; --lowest: #3f5f96; --truth: #ecebe6;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+.app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+aside { border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; max-height: 100vh; position: sticky; top: 0; }
+aside h1 { font-size: 15px; margin: 0; padding: 16px 16px 4px; }
+aside .sub { color: var(--muted); font-size: 12px; padding: 0 16px 12px; }
+.navbtn { display: block; width: calc(100% - 24px); margin: 0 12px 10px; padding: 7px 10px; border: 1px solid var(--line); background: none; color: var(--ink); border-radius: 7px; text-align: left; cursor: pointer; font: inherit; }
+.navbtn.on { background: var(--sel); }
+details { border-top: 1px solid var(--line); }
+summary { padding: 9px 16px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; justify-content: space-between; }
+summary span { color: var(--muted); font-weight: 400; }
+.run { display: flex; justify-content: space-between; gap: 8px; padding: 5px 16px 5px 24px; cursor: pointer; font-size: 13px; }
+.run:hover { background: var(--grid); }
+.run.on { background: var(--sel); }
+.run small { color: var(--muted); font-variant-numeric: tabular-nums; }
+main { padding: 20px 24px 40px; min-width: 0; }
+h2 { margin: 0 0 2px; font-size: 20px; }
+.meta { color: var(--muted); margin-bottom: 16px; font-size: 13px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+.stack { display: grid; gap: 16px; align-content: start; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 13px; }
+th, td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--muted); font-weight: 500; font-size: 12px; }
+tr.click { cursor: pointer; }
+tr.click:hover td { background: var(--grid); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.good { color: #2e9d57; } .bad { color: var(--booster); }
+svg { display: block; width: 100%; height: auto; }
+svg text { fill: var(--muted); font-size: 11px; font-family: inherit; }
+.controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.controls button, .controls select { font: inherit; padding: 6px 12px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.controls button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); min-width: 76px; }
+.controls input[type=range] { flex: 1; min-width: 160px; accent-color: var(--accent); }
+.time { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 110px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.chip { font-size: 12px; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line); cursor: pointer; background: var(--panel); color: var(--ink); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; margin-bottom: 8px; }
+.legend label { cursor: pointer; user-select: none; }
+.live { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.live div { padding: 6px 8px; border-radius: 7px; background: var(--grid); }
+video { width: 100%; border-radius: 8px; background: #000; display: block; }
+.sync { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.sync select, .sync button { font: inherit; font-size: 12px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+.livebar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.livebar input { font: inherit; padding: 7px 10px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); min-width: 0; }
+.livebar button, .form button { font: inherit; padding: 7px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.livebar button.go { background: #2e9d57; border-color: #2e9d57; color: #fff; }
+.livebar button.stop { background: var(--booster); border-color: var(--booster); color: #fff; }
+.livebar button:disabled { opacity: 0.4; cursor: default; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; background: var(--grid); color: var(--muted); }
+.badge.recording { background: var(--booster); color: #fff; animation: pulse 1.2s infinite; }
+.badge.done { background: #2e9d57; color: #fff; }
+.badge.error { background: var(--booster); color: #fff; }
+@keyframes pulse { 50% { opacity: 0.55; } }
+.big { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.log { font: 12px/1.4 ui-monospace, Menlo, monospace; color: var(--muted); white-space: pre-wrap; max-height: 150px; overflow-y: auto; }
+.form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.form input { width: 80px; font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+.hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.err { color: var(--booster); font-size: 13px; margin: 6px 0; }
+.empty { color: var(--muted); padding: 30px; text-align: center; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.kpi .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.kpi .l { color: var(--muted); font-size: 12px; }
+.tablewrap { overflow-x: auto; }
+@media (max-width: 860px) {
+  .app { grid-template-columns: 1fr; }
+  aside { position: static; max-height: 260px; }
+  .grid2 { grid-template-columns: 1fr; }
+  main { padding: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>K1 odometry</h1>
+    <div class="sub">Booster odometer vs leg odometry</div>
+    <button class="navbtn" id="nav-live">● Live: record a walk</button>
+    <button class="navbtn" id="nav-overview">Overview, all runs</button>
+    <div id="runlist"></div>
+  </aside>
+  <main id="main"><div class="empty">Loading…</div></main>
+</div>
+<script>
+const EST = [
+  { k: "booster", name: "Booster odometer", c: "--booster", w: 2.2 },
+  { k: "sole",    name: "Legs (sole)",      c: "--sole",    w: 2.2 },
+  { k: "lowest",  name: "Legs (lowest)",    c: "--lowest",  w: 1.4, dash: "5 4" },
+];
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const $ = s => document.querySelector(s);
+const f2 = v => v == null ? "–" : v.toFixed(2);
+const pct = (e, base) => base ? (100 * e / base).toFixed(1) + "%" : "";
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+                set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+let INDEX = [], RUN = null, view = null;
+let state = { t: 0, playing: false, speed: 1, last: 0, hidden: {} };
+
+async function loadIndex() {
+  INDEX = await (await fetch("data/index.json", { cache: "no-store" })).json();
+  const groups = {};
+  INDEX.forEach(r => (groups[r.group] = groups[r.group] || []).push(r));
+  const order = Object.keys(groups).sort((a, b) => (a === "Lobby" ? -1 : b === "Lobby" ? 1 : a.localeCompare(b)));
+  $("#runlist").innerHTML = order.map(g => `
+    <details ${g === "Lobby" ? "open" : ""}><summary>${g}<span>${groups[g].length}</span></summary>
+      ${groups[g].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })).map(r =>
+        `<div class="run" data-id="${r.id}">${r.name}<small>${f2(r.stats.sole.far)} m</small></div>`).join("")}
+    </details>`).join("");
+  document.querySelectorAll(".run").forEach(e => e.onclick = () => go(e.dataset.id));
+}
+async function init() {
+  await loadIndex();
+  $("#nav-overview").onclick = () => go("");
+  $("#nav-live").onclick = () => { location.hash = "live"; };
+  window.onhashchange = route;
+  route();
+  requestAnimationFrame(tick);
+}
+function go(id) { location.hash = id ? "run=" + id : ""; }
+function route() {
+  const m = location.hash.match(/run=([^&]+)/), live = location.hash === "#live";
+  document.querySelectorAll(".run").forEach(e => e.classList.toggle("on", m && e.dataset.id === m[1]));
+  $("#nav-overview").classList.toggle("on", !m && !live);
+  $("#nav-live").classList.toggle("on", live);
+  LIVE.active = live;
+  if (live) return livePage();
+  m ? openRun(decodeURIComponent(m[1])) : overview();
+}
+async function api(path, body, raw) {
+  const r = await fetch(path, body === undefined ? {} : { method: "POST", body: raw ? body : JSON.stringify(body) });
+  const j = await r.json().catch(() => ({ error: "server not reachable (start it with ./k1odom)" }));
+  if (!r.ok || j.error) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+/* ---------- live ---------- */
+const LIVE = { active: false, samples: [], marks: [], status: null, busy: false };
+async function livePage() {
+  RUN = null; view = null; state.playing = false;
+  $("#main").innerHTML = `
+    <h2>Live <span class="badge" id="lstate">…</span></h2>
+    <div class="meta" id="lrobot">connecting to the local server…</div>
+    <div class="livebar">
+      <input id="lname" placeholder="run name (empty = lobby_time)" size="26">
+      <button class="go" id="lstart">Start recording</button>
+      <input id="lmark" placeholder="mark label, e.g. far mark" size="18">
+      <button id="lmarkbtn">Mark</button>
+      <button class="stop" id="lstop">Stop &amp; save</button>
+    </div>
+    <div class="err" id="lerr"></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="legend"><span><span class="sw" style="background:var(--booster)"></span>Booster odometer</span>
+          <span><span class="sw" style="background:var(--sole)"></span>Legs (sole)</span><span>○ marks</span></div>
+        <svg id="lmap"></svg>
+      </div>
+      <div class="stack">
+        <div class="card kpis" style="margin:0;grid-template-columns:1fr 1fr 1fr">
+          <div><div class="big" id="lt">0.0 s</div><div class="l hint">time</div></div>
+          <div><div class="big" id="lgap">–</div><div class="l hint">gap booster ↔ legs</div></div>
+          <div><div class="big" id="lhz">–</div><div class="l hint">low_state / odometer Hz</div></div>
+        </div>
+        <div class="card live" id="lnums" style="margin:0"></div>
+        <div class="card" id="ldone" style="display:none"></div>
+        <div class="card"><div class="hint" style="margin:0 0 6px">robot log</div><div class="log" id="llog"></div></div>
+      </div>
+    </div>`;
+  $("#lstart").onclick = async () => {
+    try { LIVE.samples = []; LIVE.marks = []; $("#lerr").textContent = ""; $("#ldone").style.display = "none";
+          await api("/api/start", { name: $("#lname").value }); pollStatus(); }
+    catch (e) { $("#lerr").textContent = e.message; }
+  };
+  const mark = async () => { try { await api("/api/mark", { label: $("#lmark").value }); $("#lmark").value = ""; } catch (e) { $("#lerr").textContent = e.message; } };
+  $("#lmarkbtn").onclick = mark;
+  $("#lmark").onkeydown = e => { if (e.key === "Enter") mark(); };
+  $("#lstop").onclick = async () => { try { await api("/api/stop", {}); } catch (e) { $("#lerr").textContent = e.message; } };
+  LIVE.samples = []; LIVE.shownDone = null;
+  await pollStatus(); drawLive();
+}
+async function pollStatus() {
+  try { LIVE.status = await api("/api/status"); } catch (e) { LIVE.status = null; }
+  if (LIVE.active) renderLiveStatus();
+}
+async function pollLive() {
+  if (!LIVE.active || LIVE.busy) return;
+  LIVE.busy = true;
+  try {
+    const j = await api(`/api/live?since=${LIVE.samples.length}`);
+    if (j.samples.length || j.marks.length !== LIVE.marks.length) {
+      LIVE.samples.push(...j.samples); LIVE.marks = j.marks; drawLive();
+    }
+  } catch (e) {} finally { LIVE.busy = false; }
+}
+setInterval(pollLive, 250);
+setInterval(() => LIVE.active && pollStatus(), 1000);
+
+function renderLiveStatus() {
+  const s = LIVE.status;
+  if (!s) { $("#lstate").textContent = "no server"; $("#lrobot").textContent = "The page needs the local server: run ./k1odom <robot ip> in ~/k1-legodom."; return; }
+  const labels = { offline: "no robot", idle: "ready", starting: "connecting…", recording: "REC", pulling: "saving…", done: "saved", error: "error" };
+  $("#lstate").textContent = labels[s.state] || s.state;
+  $("#lstate").className = "badge " + s.state;
+  $("#lrobot").textContent = s.robot ? `robot ${s.robot}${s.name ? " · run " + s.name : ""}` : "No robot connected: start with ./k1odom <robot ip> (or ./k1odom demo).";
+  const rec = s.state === "recording", busy = ["starting", "recording", "pulling"].includes(s.state);
+  $("#lstart").disabled = busy || !s.robot; $("#lname").disabled = busy;
+  $("#lmarkbtn").disabled = !rec; $("#lstop").disabled = !rec;
+  $("#llog").textContent = s.logs.join("\n");
+  if (s.error) $("#lerr").textContent = s.error;
+  if (s.state === "done" && LIVE.shownDone !== s.run_id) { LIVE.shownDone = s.run_id; liveDone(s); }
+}
+async function liveDone(s) {
+  await loadIndex();
+  const box = $("#ldone"); box.style.display = "";
+  box.innerHTML = `<b>Saved ${s.name}.</b> Tape measurements (optional, can be added later on the run page):
+    ${truthForm(s.run_id, {})}<div style="margin-top:10px"><button class="chip" id="lopen">Open the run →</button></div>`;
+  bindTruthForm(s.run_id, () => go(s.run_id));
+  $("#lopen").onclick = () => go(s.run_id);
+}
+function truthForm(id, t) {
+  const v = x => x == null ? "" : x;
+  return `<div class="form" style="margin-top:8px" data-id="${id}">
+    far <input id="tf" type="number" step="0.01" placeholder="m" value="${v(t.far)}">
+    end x <input id="tx" type="number" step="0.01" placeholder="fwd m" value="${v(t.end && t.end[0])}">
+    y <input id="ty" type="number" step="0.01" placeholder="left m" value="${v(t.end && t.end[1])}">
+    <button id="tsave">Save</button></div>
+    <div class="hint">far = tape distance START → farthest point; end = where it stopped, from START (x forward, y left). Back on START: 0 0.</div>`;
+}
+function bindTruthForm(id, after) {
+  $("#tsave").onclick = async () => {
+    try {
+      await api("/api/truth", { id, far: $("#tf").value, end: [$("#tx").value, $("#ty").value] });
+      await loadIndex(); after ? after() : openRun(id);
+    } catch (e) { alert(e.message); }
+  };
+}
+function drawLive() {
+  const svg = $("#lmap"); if (!svg) return;
+  const S = LIVE.samples, last = S[S.length - 1];
+  let xs = [0], ys = [0];
+  S.forEach(p => { ["b", "l"].forEach(k => { if (p[k]) { xs.push(p[k][0]); ys.push(p[k][1]); } }); });
+  let [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const half = Math.max(1.5, (x1 - x0) / 2 + 0.5, (y1 - y0) / 2 + 0.5), mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+  x0 = mx - half; x1 = mx + half; y0 = my - half; y1 = my + half;
+  const W = 600, H = 600, sc = W / (2 * half);
+  const P = (x, y) => [W / 2 - sc * (y - my), H / 2 - sc * (x - mx)];
+  svg.innerHTML = ""; svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const step = niceStep(2 * half);
+  for (let v = Math.ceil(x0 / step) * step; v <= x1; v += step) { const [, py] = P(v, my); el("line", { x1: 0, x2: W, y1: py, y2: py, stroke: css("--grid") }, svg); el("text", { x: 4, y: py - 3 }, svg).textContent = `${+v.toFixed(2)} m`; }
+  for (let v = Math.ceil(y0 / step) * step; v <= y1; v += step) { const [px] = P(mx, v); el("line", { x1: px, x2: px, y1: 0, y2: H, stroke: css("--grid") }, svg); }
+  const [sx, sy] = P(0, 0);
+  el("rect", { x: sx - 5, y: sy - 5, width: 10, height: 10, fill: css("--truth") }, svg);
+  el("text", { x: sx + 8, y: sy + 14 }, svg).textContent = "start";
+  const nums = [];
+  [["b", "--booster", "Booster odometer"], ["l", "--sole", "Legs (sole)"]].forEach(([k, c, name]) => {
+    const pts = S.filter(p => p[k]);
+    if (!pts.length) { nums.push(`<div><span class="sw" style="background:var(${c})"></span>${name}<br>–</div>`); return; }
+    const d = pts.map((p, i) => (i ? "L" : "M") + P(p[k][0], p[k][1]).map(v => v.toFixed(1)).join(",")).join("");
+    el("path", { d, fill: "none", stroke: css(c), "stroke-width": 2.2, "stroke-linejoin": "round" }, svg);
+    LIVE.marks.forEach(m => { const q = S.reduce((a, p) => Math.abs(p.t - m.t) < Math.abs(a.t - m.t) ? p : a, S[0]);
+      if (q[k]) { const [qx, qy] = P(q[k][0], q[k][1]); el("circle", { cx: qx, cy: qy, r: 4, fill: "none", stroke: css(c), "stroke-width": 1.5 }, svg);
+        if (k === "l") el("text", { x: qx + 7, y: qy + 4 }, svg).textContent = m.label; } });
+    const p = pts[pts.length - 1][k], L = 15;
+    const pt = (a, len) => P(p[0] + len / sc * Math.cos(a), p[1] + len / sc * Math.sin(a));
+    el("path", { d: `M${pt(p[2], L)}L${pt(p[2] + 2.5, L * 0.6)}L${pt(p[2] - 2.5, L * 0.6)}Z`, fill: css(c), stroke: css("--panel") }, svg);
+    nums.push(`<div><span class="sw" style="background:var(${c})"></span>${name}<br>x ${p[0].toFixed(2)} · y ${p[1].toFixed(2)} · ${(p[2] * 180 / Math.PI).toFixed(0)}° · ${Math.hypot(p[0], p[1]).toFixed(2)} m</div>`);
+  });
+  $("#lnums").innerHTML = nums.join("");
+  if (last) {
+    $("#lt").textContent = last.t.toFixed(1) + " s";
+    $("#lgap").textContent = last.b && last.l ? Math.hypot(last.b[0] - last.l[0], last.b[1] - last.l[1]).toFixed(2) + " m" : "–";
+    $("#lhz").textContent = last.hz ? `${last.hz[0]} / ${last.hz[1]}` : "–";
+  }
+}
+
+/* ---------- overview ---------- */
+function overview() {
+  RUN = null; state.playing = false;
+  const withTruth = INDEX.filter(r => r.truth && (r.truth.far || r.truth.end));
+  const ratios = INDEX.filter(r => r.stats.booster.far > 0.5).map(r => r.stats.sole.far / r.stats.booster.far);
+  const mean = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : null;
+  const median = a => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+  const errMean = k => mean(withTruth.filter(r => r.truth.far).map(r => Math.abs(r.stats[k].far_err) / r.truth.far * 100));
+  const kpi = (v, l) => `<div class="card kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+  const rows = INDEX.slice().sort((a, b) => (a.group === "Lobby" ? -1 : b.group === "Lobby" ? 1 : a.group.localeCompare(b.group)) || a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const err = (r, k, f) => r.stats[k][f] == null ? "–" : `${r.stats[k][f] >= 0 && f === "far_err" ? "+" : ""}${r.stats[k][f].toFixed(2)}`;
+  $("#main").innerHTML = `
+    <h2>Overview</h2>
+    <div class="meta">${INDEX.length} runs. Distances in metres, in each estimate's own start frame. Tape truth comes from <code>truth.json</code>.</div>
+    <div class="kpis">
+      ${kpi(INDEX.length, "runs")}
+      ${kpi(withTruth.length, "runs with tape truth")}
+      ${kpi(ratios.length ? median(ratios).toFixed(3) + "×" : "–", "legs / Booster farthest distance, median")}
+      ${kpi(errMean("booster") == null ? "–" : errMean("booster").toFixed(1) + "%", "Booster |far error| vs tape")}
+      ${kpi(errMean("sole") == null ? "–" : errMean("sole").toFixed(1) + "%", "Legs |far error| vs tape")}
+    </div>
+    <div class="card tablewrap"><table>
+      <tr><th>Run</th><th>Group</th><th>s</th><th>Tape far</th><th>Booster far</th><th>Legs far</th><th>Legs / Booster</th>
+          <th>Booster far err</th><th>Legs far err</th><th>Booster end err</th><th>Legs end err</th><th>Video</th></tr>
+      ${rows.map(r => `<tr class="click" data-id="${r.id}"><td>${r.name}</td><td>${r.group}</td><td>${r.seconds.toFixed(0)}</td>
+        <td>${r.truth && r.truth.far ? r.truth.far.toFixed(2) : "–"}</td>
+        <td>${f2(r.stats.booster.far)}</td><td>${f2(r.stats.sole.far)}</td>
+        <td>${r.stats.booster.far > 0.5 ? (r.stats.sole.far / r.stats.booster.far).toFixed(3) : "–"}</td>
+        <td>${err(r, "booster", "far_err")}</td><td>${err(r, "sole", "far_err")}</td>
+        <td>${err(r, "booster", "end_err")}</td><td>${err(r, "sole", "end_err")}</td>
+        <td>${r.video ? "yes" : ""}</td></tr>`).join("")}
+    </table></div>`;
+  document.querySelectorAll("tr.click").forEach(e => e.onclick = () => go(e.dataset.id));
+}
+
+/* ---------- one run ---------- */
+async function openRun(id) {
+  const r = await (await fetch(`data/${id}.json`, { cache: "no-store" })).json();
+  RUN = r; state.t = 0; state.playing = false;
+  if (r.video) {
+    const saved = store.get("offset:" + id);
+    r.video.offset = saved != null ? parseFloat(saved) : r.video.offset;
+  }
+  const truth = r.truth || {};
+  const rowFor = e => {
+    const s = r.stats[e.k];
+    return `<tr><td><span class="sw" style="background:var(${e.c})"></span>${e.name}</td>
+      <td>${f2(s.end[0])}, ${f2(s.end[1])}</td><td>${s.yaw.toFixed(0)}°</td><td>${f2(s.far)}</td><td>${f2(s.path)}</td>
+      ${truth.far ? `<td class="${Math.abs(s.far_err) < 0.1 * truth.far ? "good" : "bad"}">${s.far_err >= 0 ? "+" : ""}${s.far_err.toFixed(2)} (${pct(s.far_err, truth.far)})</td>` : ""}
+      ${truth.end ? `<td>${s.end_err.toFixed(2)} (${pct(s.end_err, s.path)} of path)</td>` : ""}</tr>`;
+  };
+  $("#main").innerHTML = `
+    <h2>${r.name}</h2>
+    <div class="meta">${r.group} · ${r.seconds.toFixed(1)} s${r.odom_glitches ? ` · ${r.odom_glitches} odometer glitches dropped` : ""}
+      ${truth.far ? ` · tape far ${truth.far} m` : ""}${truth.end ? ` · tape end (${truth.end[0]}, ${truth.end[1]})` : ""}</div>
+    <div class="controls">
+      <button class="primary" id="play">Play</button>
+      <select id="speed">${[0.5, 1, 2, 4, 8].map(s => `<option value="${s}" ${s === state.speed ? "selected" : ""}>${s}×</option>`).join("")}</select>
+      <input type="range" id="scrub" min="0" max="${r.seconds}" step="0.05" value="0">
+      <span class="time" id="time"></span>
+    </div>
+    ${r.marks.length ? `<div class="chips">${r.marks.map((m, i) => `<span class="chip" data-i="${i}">${m.label} · ${m.t.toFixed(1)} s</span>`).join("")}</div>` : ""}
+    <div class="grid2">
+      <div class="card">
+        <div class="legend">${EST.map(e => `<label><input type="checkbox" data-k="${e.k}" ${state.hidden[e.k] ? "" : "checked"}>
+          <span class="sw" style="background:var(${e.c})"></span>${e.name}</label>`).join("")}</div>
+        <svg id="traj"></svg>
+        <div class="live" id="live"></div>
+      </div>
+      <div class="stack">
+        ${r.group === "Lobby" ? `<div class="card"><b>Tape</b>${truthForm(r.id, truth)}
+          ${r.video ? "" : `<div class="form" style="margin-top:12px">Phone video <input type="file" id="vfile" accept="video/*" style="width:auto"><span id="vmsg" class="hint"></span></div>`}</div>` : ""}
+        ${r.video ? `<div class="card"><video id="vid" src="${r.video.src}" playsinline muted controls></video>
+          <div class="sync">Sync: pause on the frame where you pressed Enter, pick that mark,
+            <select id="syncmark">${r.marks.map((m, i) => `<option value="${i}">${m.label}</option>`).join("")}</select>
+            <button id="syncbtn">This frame = mark</button> offset <b id="offs"></b> s</div></div>` : ""}
+        <div class="card"><svg id="dist"></svg></div>
+        <div class="card tablewrap"><table>
+          <tr><th>Estimate</th><th>End x, y</th><th>Yaw</th><th>Far</th><th>Path</th>${truth.far ? "<th>Far err</th>" : ""}${truth.end ? "<th>End err</th>" : ""}</tr>
+          ${EST.map(rowFor).join("")}
+        </table></div>
+      </div>
+    </div>`;
+  if (r.group === "Lobby") bindTruthForm(r.id);
+  const vf = $("#vfile");
+  if (vf) vf.onchange = async () => {
+    const f = vf.files[0]; if (!f) return;
+    $("#vmsg").textContent = `uploading ${(f.size / 1e6).toFixed(0)} MB…`;
+    try { await api(`/api/video?id=${encodeURIComponent(r.id)}&ext=${f.name.split(".").pop()}`, f, true); await loadIndex(); openRun(r.id); }
+    catch (e) { $("#vmsg").textContent = e.message; }
+  };
+  $("#play").onclick = togglePlay;
+  $("#speed").onchange = e => { state.speed = +e.target.value; const v = $("#vid"); if (v) v.playbackRate = state.speed; };
+  $("#scrub").oninput = e => seek(+e.target.value);
+  document.querySelectorAll(".chip").forEach(c => c.onclick = () => seek(r.marks[+c.dataset.i].t));
+  document.querySelectorAll(".legend input").forEach(c => c.onchange = () => { state.hidden[c.dataset.k] = !c.checked; buildViews(); draw(); });
+  const v = $("#vid");
+  if (v) {
+    $("#offs").textContent = r.video.offset.toFixed(2);
+    $("#syncbtn").onclick = () => {
+      r.video.offset = r.marks[+$("#syncmark").value].t - v.currentTime;
+      store.set("offset:" + r.id, r.video.offset);
+      if (r.group === "Lobby") api("/api/offset", { id: r.id, offset: r.video.offset }).catch(() => {});
+      $("#offs").textContent = r.video.offset.toFixed(2);
+      seek(r.marks[+$("#syncmark").value].t);
+    };
+    v.onseeked = () => { if (!state.playing) { state.t = clampT(v.currentTime + r.video.offset); draw(); } };
+  }
+  buildViews(); draw();
+}
+
+function clampT(t) { return Math.max(0, Math.min(RUN.seconds, t)); }
+function seek(t) {
+  state.t = clampT(t);
+  const v = $("#vid");
+  if (v) { const vt = state.t - RUN.video.offset; if (vt >= 0 && (!v.duration || vt <= v.duration)) v.currentTime = vt; }
+  draw();
+}
+function togglePlay() {
+  state.playing = !state.playing;
+  if (state.playing && state.t >= RUN.seconds - 0.05) seek(0);
+  const v = $("#vid");
+  if (v) {
+    if (state.playing) { const vt = state.t - RUN.video.offset; if (vt >= 0 && vt <= (v.duration || 1e9)) { v.currentTime = vt; v.playbackRate = state.speed; v.play(); } }
+    else v.pause();
+  }
+  $("#play").textContent = state.playing ? "Pause" : "Play";
+  state.last = performance.now();
+}
+function tick(now) {
+  if (RUN && state.playing) {
+    const v = $("#vid");
+    const vt = state.t - (RUN.video ? RUN.video.offset : 0);
+    if (v && !v.paused && vt >= 0 && vt <= v.duration) state.t = v.currentTime + RUN.video.offset;
+    else {
+      state.t += (now - state.last) / 1000 * state.speed;
+      if (v && v.paused && RUN.video && state.t - RUN.video.offset >= 0 && state.t - RUN.video.offset < (v.duration || 0)) {
+        v.currentTime = state.t - RUN.video.offset; v.playbackRate = state.speed; v.play();
+      }
+    }
+    if (state.t >= RUN.seconds) { state.t = RUN.seconds; togglePlay(); }
+    draw();
+  }
+  state.last = now;
+  requestAnimationFrame(tick);
+}
+
+/* ---------- drawing ---------- */
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; }
+function niceStep(span) { for (const s of [0.1, 0.2, 0.5, 1, 2, 5, 10, 20]) if (span / s <= 10) return s; return 50; }
+
+function buildViews() {
+  const r = RUN, shown = EST.filter(e => !state.hidden[e.k]);
+  // trajectory, x forward = up
+  let xs = [0], ys = [0];
+  shown.forEach(e => { xs = xs.concat(r.series[e.k].x); ys = ys.concat(r.series[e.k].y); });
+  if (r.truth && r.truth.end) { xs.push(r.truth.end[0]); ys.push(r.truth.end[1]); }
+  let [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const pad = Math.max(0.3, 0.08 * Math.max(x1 - x0, y1 - y0));
+  x0 -= pad; x1 += pad; y0 -= pad; y1 += pad;
+  const W = 600, H = Math.max(320, Math.min(640, W * (x1 - x0) / Math.max(y1 - y0, 0.01)));
+  const sc = Math.min(W / (y1 - y0), H / (x1 - x0));
+  const cx = W / 2 - sc * (-(y0 + y1) / 2), cy = H / 2 + sc * ((x0 + x1) / 2);
+  const P = (x, y) => [cx - sc * y, cy - sc * x];   // y left -> screen left
+  const svg = $("#traj"); svg.innerHTML = ""; svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const step = niceStep(Math.max(x1 - x0, y1 - y0));
+  const g = el("g", {}, svg);
+  for (let v = Math.ceil(x0 / step) * step; v <= x1; v += step) { const [, py] = P(v, 0); el("line", { x1: 0, x2: W, y1: py, y2: py, stroke: css("--grid") }, g); el("text", { x: 4, y: py - 3 }, g).textContent = `${+v.toFixed(2)} m`; }
+  for (let v = Math.ceil(y0 / step) * step; v <= y1; v += step) { const [px] = P(0, v); el("line", { x1: px, x2: px, y1: 0, y2: H, stroke: css("--grid") }, g); }
+  if (r.truth && r.truth.far) {
+    const [px, py] = P(0, 0);
+    el("circle", { cx: px, cy: py, r: sc * r.truth.far, fill: "none", stroke: css("--muted"), "stroke-dasharray": "4 4" }, g);
+  }
+  const [sx, sy] = P(0, 0);
+  el("rect", { x: sx - 5, y: sy - 5, width: 10, height: 10, fill: css("--truth") }, g);
+  el("text", { x: sx + 8, y: sy + 14 }, g).textContent = "start";
+  if (r.truth && r.truth.end) {
+    const [tx, ty] = P(r.truth.end[0], r.truth.end[1]);
+    el("path", { d: star(tx, ty, 9), fill: css("--truth") }, g);
+    el("text", { x: tx + 10, y: ty - 8 }, g).textContent = "true end";
+  }
+  view = { P, sc, layers: {} };
+  shown.forEach(e => {
+    const s = r.series[e.k], col = css(e.c);
+    const d = s.x.map((x, i) => (i ? "L" : "M") + P(x, s.y[i]).map(v => v.toFixed(1)).join(",")).join("");
+    el("path", { d, fill: "none", stroke: col, "stroke-width": e.w, opacity: 0.25, "stroke-dasharray": e.dash || "" }, svg);
+    const done = el("path", { fill: "none", stroke: col, "stroke-width": e.w, "stroke-dasharray": e.dash || "", "stroke-linejoin": "round" }, svg);
+    r.marks.forEach(m => { const i = idx(m.t); const [mx, my] = P(s.x[i], s.y[i]); el("circle", { cx: mx, cy: my, r: 3, fill: "none", stroke: col }, svg); });
+    const bot = el("path", { fill: col, stroke: css("--panel"), "stroke-width": 1 }, svg);
+    view.layers[e.k] = { done, bot, s };
+  });
+
+  // distance from start over time
+  const dv = $("#dist"); dv.innerHTML = "";
+  const DW = 600, DH = 210, L = 38, B = 22, T = 10, R = 8;
+  dv.setAttribute("viewBox", `0 0 ${DW} ${DH}`);
+  let dmax = Math.max(0.5, ...shown.map(e => r.stats[e.k].far), (r.truth && r.truth.far) || 0) * 1.08;
+  const X = t => L + (DW - L - R) * t / r.seconds, Y = d => DH - B - (DH - B - T) * d / dmax;
+  const ds = niceStep(dmax), ts = niceStep(r.seconds);
+  for (let v = 0; v <= dmax; v += ds) { el("line", { x1: L, x2: DW - R, y1: Y(v), y2: Y(v), stroke: css("--grid") }, dv); el("text", { x: 4, y: Y(v) + 4 }, dv).textContent = +v.toFixed(2); }
+  for (let v = 0; v <= r.seconds; v += ts * (r.seconds / ts > 12 ? 2 : 1)) el("text", { x: X(v) - 6, y: DH - 6 }, dv).textContent = `${+v.toFixed(1)}s`;
+  el("text", { x: L + 4, y: T + 10 }, dv).textContent = "distance from start (m)";
+  if (r.truth && r.truth.far) el("line", { x1: L, x2: DW - R, y1: Y(r.truth.far), y2: Y(r.truth.far), stroke: css("--muted"), "stroke-dasharray": "4 4" }, dv);
+  r.marks.forEach(m => el("line", { x1: X(m.t), x2: X(m.t), y1: T, y2: DH - B, stroke: css("--line") }, dv));
+  shown.forEach(e => {
+    const s = r.series[e.k];
+    const d = r.t.map((t, i) => (i ? "L" : "M") + X(t).toFixed(1) + "," + Y(Math.hypot(s.x[i], s.y[i])).toFixed(1)).join("");
+    el("path", { d, fill: "none", stroke: css(e.c), "stroke-width": e.w * 0.8, "stroke-dasharray": e.dash || "" }, dv);
+  });
+  view.cursor = el("line", { y1: T, y2: DH - B, stroke: css("--ink"), "stroke-width": 1 }, dv);
+  view.X = X;
+  dv.onclick = ev => { const b = dv.getBoundingClientRect(); seek((ev.clientX - b.left) / b.width * DW < L ? 0 : ((ev.clientX - b.left) / b.width * DW - L) / (DW - L - R) * r.seconds); };
+}
+function star(x, y, r) { let d = ""; for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; d += (i ? "L" : "M") + (x + rr * Math.cos(a)).toFixed(1) + "," + (y + rr * Math.sin(a)).toFixed(1); } return d + "Z"; }
+function idx(t) { return Math.max(0, Math.min(RUN.t.length - 1, Math.round(t * 20))); }
+
+function draw() {
+  if (!RUN || !view) return;
+  const i = idx(state.t), live = [];
+  for (const k in view.layers) {
+    const { done, bot, s } = view.layers[k];
+    let d = "";
+    for (let j = 0; j <= i; j++) d += (j ? "L" : "M") + view.P(s.x[j], s.y[j]).map(v => v.toFixed(1)).join(",");
+    done.setAttribute("d", d);
+    // robot: triangle pointing along yaw (x forward = up on screen)
+    const [px, py] = view.P(s.x[i], s.y[i]), a = s.yaw[i], L = 13;
+    const pt = (ang, len) => view.P(s.x[i] + len / view.sc * Math.cos(ang), s.y[i] + len / view.sc * Math.sin(ang));
+    const tip = pt(a, L), l = pt(a + 2.5, L * 0.6), r = pt(a - 2.5, L * 0.6);
+    bot.setAttribute("d", `M${tip}L${l}L${r}Z`);
+    const e = EST.find(e => e.k === k);
+    live.push(`<div><span class="sw" style="background:var(${e.c})"></span>${e.name}<br>x ${s.x[i].toFixed(2)} · y ${s.y[i].toFixed(2)} · ${(s.yaw[i] * 180 / Math.PI).toFixed(0)}° · ${Math.hypot(s.x[i], s.y[i]).toFixed(2)} m</div>`);
+  }
+  $("#live").innerHTML = live.join("");
+  view.cursor.setAttribute("x1", view.X(state.t)); view.cursor.setAttribute("x2", view.X(state.t));
+  $("#scrub").value = state.t;
+  $("#time").textContent = `${state.t.toFixed(1)} / ${RUN.seconds.toFixed(1)} s`;
+}
+init().catch(e => { $("#main").innerHTML = `<div class="empty">Could not load data/index.json (${e}). Run ./k1odom</div>`; });
+</script>
+</body>
+</html>

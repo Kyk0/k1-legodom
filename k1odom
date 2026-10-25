@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# K1 odometry test. Run from ~/k1-legodom on the Mac.
+#
+#   ./k1odom 192.168.2.152   connect to the robot (password once), open the site -> Live: Start / Mark / Stop
+#   ./k1odom                 same, with the last robot address
+#   ./k1odom demo            no robot: replays a September run as if it were live (to try the site)
+#   ./k1odom site            no robot: just browse the runs
+#   ./k1odom pull            copy every run from the robot (e.g. after the server was closed mid-run)
+#
+# A plain IP means booster@IP; user@ip works too. Ctrl+C in this terminal closes the site.
+set -euo pipefail
+cd "$(dirname "$0")"
+PORT=8790   # 8765 is gpumon
+SSHO=(-o ControlMaster=auto -o "ControlPath=$HOME/.ssh/k1-%r@%h:%p" -o ControlPersist=yes -o ConnectTimeout=8)
+
+free_port() {   # an older copy of the site server still running -> stop it
+  local pids
+  pids=$(lsof -ti "tcp:$PORT" -sTCP:LISTEN 2>/dev/null || true)
+  for p in $pids; do
+    if ps -o command= -p "$p" | grep -qE "server.py|http.server"; then kill "$p"; sleep 0.3; fi
+  done
+}
+
+connect() {
+  source robot.env
+  if ! ssh "${SSHO[@]}" -O check "$ROBOT" 2>/dev/null; then
+    echo "== connecting to $ROBOT (robot password)"
+    ssh "${SSHO[@]}" -fN "$ROBOT"
+  fi
+  echo "== copying the recorder to the robot"
+  ssh "${SSHO[@]}" "$ROBOT" "mkdir -p ~/k1-legodom/runs"
+  scp "${SSHO[@]}" -q legodom.py odom_walk.py "$ROBOT:~/k1-legodom/"
+}
+
+arg="${1:-}"
+if [[ "$arg" =~ ^([A-Za-z0-9_.-]+@)?[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  [[ "$arg" == *@* ]] || arg="booster@$arg"
+  echo "ROBOT=$arg" > robot.env
+  arg=""
+fi
+
+case "$arg" in
+  -h|--help|help) sed -n '2,11p' "$0" ;;
+  demo) free_port; exec python3 server.py --robot demo --port "$PORT" ;;
+  site) free_port; exec python3 server.py --port "$PORT" ;;
+  pull)
+    [ -f robot.env ] || { echo "first: ./k1odom <robot ip>"; exit 1; }
+    source robot.env
+    mkdir -p runs
+    scp "${SSHO[@]}" -rq "$ROBOT:~/k1-legodom/runs/*" runs/ && ls runs
+    python3 make_site.py ;;
+  "")
+    [ -f robot.env ] || { echo "first time: ./k1odom <robot ip>, e.g. ./k1odom 192.168.2.152"; exit 1; }
+    connect
+    free_port
+    source robot.env
+    exec python3 server.py --robot "$ROBOT" --port "$PORT" ;;
+  *) echo "unknown: $arg (see ./k1odom help)"; exit 1 ;;
+esac

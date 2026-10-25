@@ -1,0 +1,10 @@
+# robot address, generated site, local caches
+robot.env
+site/
+__pycache__/
+.DS_Store
+# September heel-study runs stay local (heel study is under double-blind review; 200 MB)
+runs_old/
+# phone videos and plot outputs
+runs/*/video.*
+runs/*/compare.*
