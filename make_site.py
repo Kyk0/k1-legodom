@@ -110,6 +110,10 @@ def main():
         print(f"  building {group} / {run.name}")
         index.append(build(run, group, rid))
         built += 1
+    # runs/MAIN names the run that counts (the one to show first)
+    main_run = (ROOT / "runs" / "MAIN").read_text().strip() if (ROOT / "runs" / "MAIN").exists() else ""
+    for r in index:
+        r["main"] = r["group"] == "Lobby" and r["name"] == main_run
     (DATA / "index.json").write_text(json.dumps(index, indent=1))
     print(f"site: {len(index)} runs ({built} rebuilt) -> {SITE / 'index.html'}")
 

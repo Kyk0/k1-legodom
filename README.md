@@ -6,6 +6,19 @@ Two estimates, recorded together while the robot walks in Booster's normal walki
 
 The robot side only listens. It never sends commands.
 
+## Main run: `runs/lobby_1025_151300` (2026-10-25)
+The run that counts (named in `runs/MAIN`, ★ on the site). 110 s, 200 steps, ~49 m walked: three out-and-back
+legs from START (~7.5, ~5.5 and ~10.5 m), back to START after each.
+
+| Estimate | Farthest | Path | End (x, y) from START | End distance from START |
+|---|---|---|---|---|
+| Booster odometer | 10.80 m | 48.5 m | (-0.88, 0.37) | 0.95 m |
+| Legs (sole) | 10.77 m | 49.6 m | (-0.14, -0.25) | 0.29 m |
+| Legs (lowest) | 12.11 m | 55.3 m | (-0.21, -0.24) | 0.32 m |
+
+No tape numbers entered yet. If the robot ended on START, the end distance is the error: legs 0.29 m (0.6% of
+the path) against Booster 0.95 m (1.9%). Booster's legs also fan out in heading on the map, ours stay on one line.
+
 ## Launch
 ```
 cd ~/k1-legodom

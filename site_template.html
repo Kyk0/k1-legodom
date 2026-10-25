@@ -124,8 +124,8 @@ async function loadIndex() {
   const order = Object.keys(groups).sort((a, b) => (a === "Lobby" ? -1 : b === "Lobby" ? 1 : a.localeCompare(b)));
   $("#runlist").innerHTML = order.map(g => `
     <details ${g === "Lobby" ? "open" : ""}><summary>${g}<span>${groups[g].length}</span></summary>
-      ${groups[g].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })).map(r =>
-        `<div class="run" data-id="${r.id}">${r.name}<small>${f2(r.stats.sole.far)} m</small></div>`).join("")}
+      ${groups[g].sort((a, b) => (b.main - a.main) || a.name.localeCompare(b.name, undefined, { numeric: true })).map(r =>
+        `<div class="run" data-id="${r.id}">${r.main ? "★ " : ""}${r.name}<small>${f2(r.stats.sole.far)} m</small></div>`).join("")}
     </details>`).join("");
   document.querySelectorAll(".run").forEach(e => e.onclick = () => go(e.dataset.id));
 }
@@ -302,7 +302,7 @@ function overview() {
   const median = a => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
   const errMean = k => mean(withTruth.filter(r => r.truth.far).map(r => Math.abs(r.stats[k].far_err) / r.truth.far * 100));
   const kpi = (v, l) => `<div class="card kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`;
-  const rows = INDEX.slice().sort((a, b) => (a.group === "Lobby" ? -1 : b.group === "Lobby" ? 1 : a.group.localeCompare(b.group)) || a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const rows = INDEX.slice().sort((a, b) => (b.main - a.main) || (a.group === "Lobby" ? -1 : b.group === "Lobby" ? 1 : a.group.localeCompare(b.group)) || a.name.localeCompare(b.name, undefined, { numeric: true }));
   const err = (r, k, f) => r.stats[k][f] == null ? "–" : `${r.stats[k][f] >= 0 && f === "far_err" ? "+" : ""}${r.stats[k][f].toFixed(2)}`;
   $("#main").innerHTML = `
     <h2>Overview</h2>
@@ -317,7 +317,7 @@ function overview() {
     <div class="card tablewrap"><table>
       <tr><th>Run</th><th>Group</th><th>s</th><th>Tape far</th><th>Booster far</th><th>Legs far</th><th>Legs / Booster</th>
           <th>Booster far err</th><th>Legs far err</th><th>Booster end err</th><th>Legs end err</th><th>Video</th></tr>
-      ${rows.map(r => `<tr class="click" data-id="${r.id}"><td>${r.name}</td><td>${r.group}</td><td>${r.seconds.toFixed(0)}</td>
+      ${rows.map(r => `<tr class="click" data-id="${r.id}"><td>${r.main ? "★ " : ""}${r.name}</td><td>${r.group}</td><td>${r.seconds.toFixed(0)}</td>
         <td>${r.truth && r.truth.far ? r.truth.far.toFixed(2) : "–"}</td>
         <td>${f2(r.stats.booster.far)}</td><td>${f2(r.stats.sole.far)}</td>
         <td>${r.stats.booster.far > 0.5 ? (r.stats.sole.far / r.stats.booster.far).toFixed(3) : "–"}</td>
@@ -331,6 +331,7 @@ function overview() {
 /* ---------- one run ---------- */
 async function openRun(id) {
   const r = await (await fetch(`data/${id}.json`, { cache: "no-store" })).json();
+  r.main = !!(INDEX.find(x => x.id === id) || {}).main;
   RUN = r; state.t = 0; state.playing = false;
   if (r.video) {
     const saved = store.get("offset:" + id);
@@ -345,7 +346,7 @@ async function openRun(id) {
       ${truth.end ? `<td>${s.end_err.toFixed(2)} (${pct(s.end_err, s.path)} of path)</td>` : ""}</tr>`;
   };
   $("#main").innerHTML = `
-    <h2>${r.name}</h2>
+    <h2>${r.main ? "★ " : ""}${r.name}${r.main ? ' <span class="badge done">main run</span>' : ""}</h2>
     <div class="meta">${r.group} · ${r.seconds.toFixed(1)} s${r.odom_glitches ? ` · ${r.odom_glitches} odometer glitches dropped` : ""}
       ${truth.far ? ` · tape far ${truth.far} m` : ""}${truth.end ? ` · tape end (${truth.end[0]}, ${truth.end[1]})` : ""}</div>
     <div class="controls">
