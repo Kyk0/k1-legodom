@@ -17,7 +17,7 @@ legs from START (~7.5, ~5.5 and ~10.5 m), back to START after each.
 | Legs (lowest) | 12.11 m | 55.3 m | (-0.21, -0.24) | 0.32 m |
 
 No tape numbers entered yet. If the robot ended on START, the end distance is the error: legs 0.29 m (0.6% of
-the path) against Booster 0.95 m (1.9%). Booster's legs also fan out in heading on the map, ours stay on one line.
+the path) against Booster 0.95 m (1.9%). On the map Booster's out-and-back lines also fan out in heading; ours stay on one line.
 
 ## Launch
 ```
