@@ -35,6 +35,7 @@ Every run ended back about where it started (within ~1 ft / 0.3 m, eyeballed), e
 | `continuous_collision` | walking into an obstacle the whole time | 83 | 7.74 | 0.25 | 0.32 |
 | `side_pull` | pulled sideways | 48 | 0.91 | 0.40 | 0.20 |
 | `5m_front_back` | 6x 5 m forward + 5 m backward, no turning | 108 | 11.5 | 0.58 | 0.46 |
+| `mix_walk_and_turn` | chaotic walking and turning at once, back on START | 70 | 1.22 | 0.12 | 0.16 |
 
 With the truth good to ~0.3 m, the leg estimates are within that on every run; Booster is off by up to 7.7 m.
 Booster counts steps the robot tries to take, so it keeps "walking" when the robot is blocked or held.
