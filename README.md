@@ -20,31 +20,15 @@ Each leg is measured between the Mark presses (m1..m6), straight line, against t
 | Legs (sole) | 7.57 | 7.71 | 6.00 | 5.60 | 10.65 | 10.52 | 10.1% | 49.6 m | 0.29 m |
 | **Legs (lowest)** | 8.52 | 8.67 | 6.47 | 6.17 | 12.05 | 11.81 | **3.6%** | 55.3 m | 0.32 m |
 
-Booster and legs (sole) both under-count distance by ~10-15%. Legs (lowest) (heel / sole / toe pivot) is within
-~4% and the best of the three, so it is the default everywhere since 2026-10-26 (live numbers, site, tables). Going back to START, both leg variants end ~0.3 m off against ~1 m for Booster.
+Booster and legs (sole) both under-count distance by ~10-15%. Legs (lowest) (heel / sole / toe pivot) has about 4% mean absolute distance error on this route and is the current default. Sole is better on the separate 5 m test. Going back to START, both leg variants end ~0.3 m off against ~1 m for Booster.
 
-## Other lobby tests (2026-10-26)
-Every run ended back about where it started (within ~1 ft / 0.3 m, eyeballed), except `turn_5_left_5_right`
-(~1.5 ft forward-right). End error = distance between the estimated and the real end point, m:
+## Lobby evaluation report
 
-| Run | What | s | Booster | Legs (lowest) | Legs (sole) |
-|---|---|---|---|---|---|
-| `lobby_1025_151300` | 9 / 6 / 12 m out-and-back (tape) | 110 | 0.96 | 0.32 | 0.29 |
-| `lobby_1025_150458` | out-and-back legs | 79 | 0.88 | 0.20 | 0.42 |
-| `turn_5_left_5_right` | 5 turns on the spot, 5 back | 57 | 0.28 | 0.12 | 0.20 |
-| `orientation_stress` | pushed, blocked, turned, stepped in one spot | 81 | 2.59 | 0.18 | 0.46 |
-| `standing` | 67 s standing still | 67 | 0.00 | 0.00 | 0.00 |
-| `continuous_collision` | walking into an obstacle the whole time | 83 | 7.74 | 0.25 | 0.32 |
-| `side_pull` | pulled sideways | 48 | 0.91 | 0.40 | 0.20 |
-| `5m_front_back` | 6x 5 m forward + 5 m backward, no turning | 108 | 11.4 | 0.57 | 0.46 |
-| `mix_walk_and_turn` | chaotic walking and turning at once, back on START | 70 | 1.22 | 0.12 | 0.16 |
+The [report](REPORT.md) includes the starred 9/6/12 m run and seven identified stress tests, with an app map screenshot, analytical plots, per-run statistics and a video placeholder for each test.
 
-With the truth good to ~0.3 m, the leg estimates are within that on every run; Booster is off by up to 7.7 m.
-Booster counts steps the robot tries to take, so it keeps "walking" when the robot is blocked or held.
-`5m_front_back`, per 5 m leg (mean of 6): Booster forward 4.74 m (-5%) but backward 6.65 m (+33%), so it ends 11.4 m
-behind START. Legs are the same both ways: sole 4.85 / 4.92 m (-3% / -2%), lowest 5.38 / 5.39 m (+8%). Here sole is
-closer, on the 9/6/12 m run lowest was (-4% vs -10%): the true value sits between the two leg variants.
-Heading (IMU, shared by both): -0.4° after 5 turns, -1° after 2300° of turning, 0.05°/min standing.
+Across six individual tape-measured legs and two direction averages from the repeated 5 m test, mean absolute distance error is **14.9% for Booster, 4.7% for legs (lowest), and 8.1% for legs (sole)**. Lowest fits the 9/6/12 m route better; sole fits the 5 m forward/backward route better. These descriptive averages do not establish a universal error rate.
+
+Final positions were mostly judged by eye within about 0.3 m of START. Leg endpoint discrepancies reach 0.57 m; Booster reaches 11.42 m in the backward walking test and 7.74 m under continuous obstruction. See the report for measurement uncertainty, orientation qualifications and the exact error definitions.
 
 ## Launch
 ```

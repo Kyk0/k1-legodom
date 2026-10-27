@@ -1,0 +1,396 @@
+{
+  "distance_error_definition": "100*(estimated straight-line leg displacement - tape length)/tape length",
+  "distance_comparison_rows": [
+    "9 m out",
+    "9 m back",
+    "6 m out",
+    "6 m back",
+    "12 m out",
+    "12 m back",
+    "5 m fwd (x6)",
+    "5 m back (x6)"
+  ],
+  "signed_distance_error_percent": {
+    "lowest": [
+      -5.358435122462524,
+      -3.6720903743909696,
+      7.852502160229087,
+      2.8553596075576357,
+      0.39552889557493326,
+      -1.6004033290786257,
+      7.637222811700201,
+      7.865258233253911
+    ],
+    "booster": [
+      -17.8866967665943,
+      -15.194022456194201,
+      -4.113178694880067,
+      -10.868048814007084,
+      -13.1538745027224,
+      -19.722717946551708,
+      -5.171959508882278,
+      33.00144737061629
+    ],
+    "sole": [
+      -15.861635121399912,
+      -14.30128499746091,
+      0.07759489516122227,
+      -6.666571428620024,
+      -11.261112980585311,
+      -12.346117456213035,
+      -2.985307381783624,
+      -1.5366489663237992
+    ]
+  },
+  "mean_absolute_percent_across_8_rows": {
+    "booster": 14.888993257556042,
+    "lowest": 4.654600066780986,
+    "sole": 8.12953415344348
+  },
+  "runs": {
+    "lobby_1025_151300": {
+      "seconds": 110.1,
+      "stats": {
+        "booster": {
+          "end": [
+            -0.883,
+            0.373
+          ],
+          "yaw": 10.6,
+          "far": 10.799,
+          "path": 48.533,
+          "far_err": -1.201,
+          "end_err": 0.958
+        },
+        "sole": {
+          "end": [
+            -0.139,
+            -0.254
+          ],
+          "yaw": 10.7,
+          "far": 10.768,
+          "path": 49.628,
+          "far_err": -1.232,
+          "end_err": 0.29
+        },
+        "lowest": {
+          "end": [
+            -0.215,
+            -0.243
+          ],
+          "yaw": 10.7,
+          "far": 12.107,
+          "path": 55.262,
+          "far_err": 0.107,
+          "end_err": 0.324
+        }
+      },
+      "reported_truth": {
+        "far": 12.0,
+        "end": [
+          0.0,
+          0.0
+        ],
+        "note": "tape: out-and-back 9 m, turn, 6 m, then 12 m; back on START"
+      }
+    },
+    "5m_front_back": {
+      "seconds": 107.5,
+      "stats": {
+        "booster": {
+          "end": [
+            -10.727,
+            3.907
+          ],
+          "yaw": 6.0,
+          "far": 11.476,
+          "path": 69.164,
+          "far_err": 6.476,
+          "end_err": 11.416
+        },
+        "sole": {
+          "end": [
+            -0.46,
+            0.024
+          ],
+          "yaw": 6.2,
+          "far": 4.698,
+          "path": 59.266,
+          "far_err": -0.302,
+          "end_err": 0.461
+        },
+        "lowest": {
+          "end": [
+            -0.177,
+            -0.545
+          ],
+          "yaw": 6.2,
+          "far": 5.469,
+          "path": 65.401,
+          "far_err": 0.469,
+          "end_err": 0.573
+        }
+      },
+      "reported_truth": {
+        "far": 5.0,
+        "end": [
+          0.0,
+          0.0
+        ],
+        "note": "5 m forward / 5 m backward (no turning), repeated; ended on START facing the same way"
+      }
+    },
+    "turn_5_left_5_right": {
+      "seconds": 56.95,
+      "stats": {
+        "booster": {
+          "end": [
+            0.142,
+            -0.098
+          ],
+          "yaw": 16.9,
+          "far": 0.397,
+          "path": 10.313,
+          "end_err": 0.284
+        },
+        "sole": {
+          "end": [
+            0.397,
+            -0.134
+          ],
+          "yaw": 16.8,
+          "far": 0.433,
+          "path": 2.839,
+          "end_err": 0.202
+        },
+        "lowest": {
+          "end": [
+            0.296,
+            -0.198
+          ],
+          "yaw": 16.8,
+          "far": 0.368,
+          "path": 2.175,
+          "end_err": 0.124
+        }
+      },
+      "reported_truth": {
+        "end": [
+          0.32,
+          -0.32
+        ],
+        "note": "eyeballed: ~1.5 ft diagonally forward-right. Final +17 deg heading = manual correction turn at the end, not IMU error; judge heading at m1 (-0.4 deg after 5 turns)"
+      }
+    },
+    "mix_walk_and_turn": {
+      "seconds": 70.35,
+      "stats": {
+        "booster": {
+          "end": [
+            -0.727,
+            -0.983
+          ],
+          "yaw": 14.0,
+          "far": 1.872,
+          "path": 26.357,
+          "end_err": 1.223
+        },
+        "sole": {
+          "end": [
+            -0.139,
+            0.069
+          ],
+          "yaw": 14.0,
+          "far": 1.489,
+          "path": 26.395,
+          "end_err": 0.156
+        },
+        "lowest": {
+          "end": [
+            0.088,
+            -0.082
+          ],
+          "yaw": 14.0,
+          "far": 1.693,
+          "path": 28.195,
+          "end_err": 0.12
+        }
+      },
+      "reported_truth": {
+        "end": [
+          0.0,
+          0.0
+        ],
+        "note": "chaotic walking + turning at the same time, ended back on START (eyeballed)"
+      }
+    },
+    "orientation_stress": {
+      "seconds": 81.02,
+      "stats": {
+        "booster": {
+          "end": [
+            1.632,
+            -2.016
+          ],
+          "yaw": -0.9,
+          "far": 3.006,
+          "path": 13.46,
+          "end_err": 2.594
+        },
+        "sole": {
+          "end": [
+            0.2,
+            -0.418
+          ],
+          "yaw": -0.9,
+          "far": 0.954,
+          "path": 10.689,
+          "end_err": 0.464
+        },
+        "lowest": {
+          "end": [
+            0.068,
+            -0.169
+          ],
+          "yaw": -0.9,
+          "far": 0.941,
+          "path": 10.67,
+          "end_err": 0.182
+        }
+      },
+      "reported_truth": {
+        "end": [
+          0.0,
+          0.0
+        ],
+        "note": "pushed / blocked, turned and walked back and forth in one spot; ended at about the same place (eyeballed)"
+      }
+    },
+    "continuous_collision": {
+      "seconds": 82.74,
+      "stats": {
+        "booster": {
+          "end": [
+            7.163,
+            -2.931
+          ],
+          "yaw": 52.3,
+          "far": 8.416,
+          "path": 27.297,
+          "end_err": 7.739
+        },
+        "sole": {
+          "end": [
+            -0.16,
+            0.281
+          ],
+          "yaw": 52.3,
+          "far": 1.307,
+          "path": 21.027,
+          "end_err": 0.323
+        },
+        "lowest": {
+          "end": [
+            0.248,
+            -0.017
+          ],
+          "yaw": 52.3,
+          "far": 1.119,
+          "path": 22.109,
+          "end_err": 0.248
+        }
+      },
+      "reported_truth": {
+        "end": [
+          0.0,
+          0.0
+        ],
+        "note": "ended about where it started, within ~1 ft (0.3 m), eyeballed"
+      }
+    },
+    "side_pull": {
+      "seconds": 47.68,
+      "stats": {
+        "booster": {
+          "end": [
+            0.756,
+            0.508
+          ],
+          "yaw": 15.3,
+          "far": 1.924,
+          "path": 7.243,
+          "end_err": 0.911
+        },
+        "sole": {
+          "end": [
+            -0.18,
+            0.088
+          ],
+          "yaw": 15.3,
+          "far": 0.461,
+          "path": 5.031,
+          "end_err": 0.201
+        },
+        "lowest": {
+          "end": [
+            -0.347,
+            0.189
+          ],
+          "yaw": 15.3,
+          "far": 0.612,
+          "path": 5.317,
+          "end_err": 0.395
+        }
+      },
+      "reported_truth": {
+        "end": [
+          0.0,
+          0.0
+        ],
+        "note": "ended about where it started, within ~1 ft (0.3 m), eyeballed"
+      }
+    },
+    "standing": {
+      "seconds": 67.15,
+      "stats": {
+        "booster": {
+          "end": [
+            -0.0,
+            0.0
+          ],
+          "yaw": 0.0,
+          "far": 0.0,
+          "path": 0.0,
+          "end_err": 0.0
+        },
+        "sole": {
+          "end": [
+            0.0,
+            -0.0
+          ],
+          "yaw": 0.0,
+          "far": 0.0,
+          "path": 0.005,
+          "end_err": 0.0
+        },
+        "lowest": {
+          "end": [
+            0.0,
+            -0.0
+          ],
+          "yaw": 0.0,
+          "far": 0.0,
+          "path": 0.005,
+          "end_err": 0.0
+        }
+      },
+      "reported_truth": {
+        "end": [
+          0.0,
+          0.0
+        ],
+        "note": "standing still, not touched"
+      }
+    }
+  }
+}

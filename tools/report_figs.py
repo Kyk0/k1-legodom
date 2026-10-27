@@ -28,7 +28,6 @@ INK, MUTED, GRID, SURF = "#0b0b0b", "#52514e", "#e8e7e3", "#fcfcfb"
 
 RUNS = [  # name, title
     ("lobby_1025_151300", "9 / 6 / 12 m out-and-back (tape)"),
-    ("lobby_1025_150458", "Out-and-back legs"),
     ("5m_front_back", "6x 5 m forward + 5 m backward"),
     ("turn_5_left_5_right", "5 turns on the spot, then 5 back"),
     ("mix_walk_and_turn", "Chaotic walking + turning"),
@@ -62,7 +61,7 @@ def run_figure(name, title):
     ax.plot(0, 0, "s", color=INK, ms=8, label="START", zorder=5)
     tr = d.get("truth") or {}
     if tr.get("end"):
-        ax.plot(tr["end"][1], tr["end"][0], "*", color=INK, ms=15, mec=SURF, label="real end", zorder=6)
+        ax.plot(tr["end"][1], tr["end"][0], "*", color=INK, ms=15, mec=SURF, label="approx. reported end", zorder=6)
     ax.invert_xaxis()                     # y = left, drawn to the left, so the map is seen from above
     ax.set_aspect("equal", adjustable="datalim")
     ax.set_xlabel("y, left (m)")
@@ -83,7 +82,7 @@ def run_figure(name, title):
     a3.plot(t, yaw - yaw[0], color=INK, lw=1.2)
     a3.set_ylabel("heading (deg)")
     a3.set_xlabel("time (s)")
-    a3.set_title("Heading (IMU, the same for all three)", loc="left")
+    a3.set_title("Leg heading (IMU)", loc="left")
     for m in d["marks"]:
         for a in (a2, a3):
             a.axvline(m["t"], color=GRID, lw=1, zorder=0)
@@ -119,7 +118,7 @@ def end_errors():
     ax.set_xlim(0, cap)
     ax.set_xlabel("end-point error (m)   ·   bars cut at 3 m")
     ax.grid(axis="y", visible=False)
-    ax.set_title("Where each estimate thinks the robot ended vs where it really ended", loc="left")
+    ax.set_title("Endpoint discrepancy vs approximate reported end", loc="left")
     ax.legend(loc="lower right", fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / "end_errors.png", dpi=110)

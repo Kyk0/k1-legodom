@@ -1,213 +1,293 @@
-# Legged odometry on the Booster K1: lobby tests
+# K1 legged odometry: lobby test report
 
-ATR Lab · tests on 2026-10-25 and 2026-10-26, in the lobby outside the lab · code and data: this repo
+Tests: October 25–26, 2026 · [code and recordings](https://github.com/Kyk0/k1-legodom)
 
-**Task:** try legged odometry on the K1 and test it in the lobby.
+We drove the K1 with the remote in Booster's stock walking mode and recorded Booster's built-in odometer alongside our leg odometry. We tested measured out-and-back walking, backward walking, turns, pushes, continuous obstruction, sideways pulling and standing still.
 
-## Summary
+The starred **9 / 6 / 12 m run** is the main distance test. This report covers eight identified tests. The unidentified earlier out-and-back recording is excluded from the report and summary figures.
 
-We ran two position estimates side by side on the real K1 while it walked in Booster's stock walking mode on the
-remote, and compared both against the floor:
+## How much deviation / what is the error rate?
 
-- **Booster odometer**: the robot's built-in odometer (`/odometer_state`).
-- **Leg odometry (ours)**: the joint angles give the length of each step, the IMU gives the direction.
+There are two different measurements:
 
-| | Booster odometer | Leg odometry (lowest) | Leg odometry (sole) |
-|---|---|---|---|
-| Distance per tape-measured leg, mean abs error (8 legs) | 14.9 % | **4.7 %** | 8.1 % |
-| Walking backward, 5 m legs | **+33 %** | +8 % | -2 % |
-| Worst end-point error, 9 runs that came back to START | **11.4 m** | 0.57 m | 0.46 m |
-| End-point error when blocked by an obstacle | 7.7 m | 0.25 m | 0.32 m |
-| Drift standing still for 67 s | 0 | < 1 mm | < 1 mm |
+- **Distance error:** difference between an estimated leg displacement and the tape-measured distance, divided by that measured distance. This tests distance scale.
+- **Endpoint discrepancy:** distance between the estimated final position and the reported final position. Most final positions were judged by eye, within roughly 1 ft (0.3 m) of START. These are approximate closure results, not precise ground-truth errors. Opposite errors can cancel on an out-and-back route.
 
-- **Leg odometry tracks where the feet really are.** Its end-point error stays within about 0.3-0.6 m on every run,
-  including pushes, pulls, collisions and chaotic turning.
-- **Booster's odometer counts the steps the robot tries to take.** When the robot is held, pushed or walks into an
-  obstacle it keeps "walking": up to 7.7 m off. Walking backward it over-counts every leg by a third.
-- **Heading (IMU, shared by both)** is very good: -0.4° after 5 full turns, -1° after 2300° of turning,
-  0.05° drift in a minute standing still.
-- The two leg variants bracket the truth: `lowest` was better on the long 9/6/12 m legs, `sole` on the 5 m legs.
-  Overall `lowest` is the closer one and is the default.
 
-![End-point error per test](report/img/end_errors.png)
+| Distance comparison | Booster | Legs (lowest) | Legs (sole) |
+| --- | --- | --- | --- |
+| Mean absolute percentage, 8 comparison rows | 14.9% | 4.7% | 8.1% |
+| 9/6/12 m test, mean absolute percentage | 13.5% | 3.6% | 10.1% |
+| 5 m forward, signed distance error | -5.2% | +7.6% | -3.0% |
+| 5 m backward, signed distance error | +33.0% | +7.9% | -1.5% |
 
-## How it works
+The eight-row average gives equal weight to six individual 9/6/12 m traversals and two direction averages from the repeated 5 m test. It is a descriptive summary, **not** an error rate across eight independent trials or every sample. Neither contact variant is consistently best: lowest is better on the long measured routes; sole is better on the 5 m forward/backward test.
 
-**Booster odometer.** Read from the robot as it is.
+![Distance error against measured lengths](report/img/tape_segments.png)
 
-**Leg odometry.** While a foot is on the floor it does not move. The joint angles give where the body is relative
-to that foot (forward kinematics of the K1 leg), the IMU gives which way the body faces, so the body's position
-follows. When the other foot takes over, the reference moves to it, and the steps add up to the path. Two
-variants of "the point of the foot that stays put":
+## Measurement and estimation
 
-- **sole**: one fixed point under the ankle (assumes the foot lands flat).
-- **lowest**: the lowest of heel, sole centre and toe, so heel strike and toe-off pivot correctly.
+Our estimator uses joint angles for forward kinematics and IMU orientation to infer body motion relative to a planted foot. On a support change, the anchor transfers to the other foot. It does not estimate distance by integrating IMU acceleration or multiplying a step count by a fixed step length.
 
-**Recording.** A listen-only recorder on the robot (`odom_walk.py`) logs joints, IMU and both odometries at
-~500 Hz; it sends no commands. A local site (`./k1odom <robot ip>`) starts and stops it and draws both estimates on
-a live map while walking.
+- **Sole:** fixes a point under the ankle as the contact point.
+- **Lowest:** chooses the lowest of heel, sole centre and toe to approximate foot rollover; this is the current live default. Both variants are retained in the comparisons.
+- **Booster:** records `/odometer_state` directly. Its reported heading is separate from the IMU heading used by our leg estimator, although the recorded headings are often close.
 
-**Ground truth.** Tape on the floor: START, plus measured marks for the distance tests (9 m, 6 m, 12 m and 5 m).
-For the other tests the robot was walked back to START and the real end point eyeballed (within ~1 ft / 0.3 m;
-~1.5 ft forward-right for the turning test).
+The robot recorder only listens. Joints and IMU are recorded at approximately 500 Hz; topic rates can differ. Replay trajectories are resampled to 20 Hz. Estimated path length is evaluated on a 0.5 s grid to reduce trunk sway. A trajectory plot is an estimator comparison, not a ground-truth tracking system.
 
-## Results
+Tape lengths were reported as 9 m, 6 m, 12 m and 5 m. Long-route boundaries use Mark presses; the repeated 5 m boundaries are inferred from trajectory reversals. Timing and imperfect stops affect these distance comparisons. For the turning test, the approximate final reference is (0.32, -0.32) m: forward-right relative to the initial heading.
 
-### Distance against the tape
+## Measured-distance results
 
-Each out-and-back leg measured between the Mark presses (9/6/12 m run) or between turning points (5 m run),
-straight line, against the tape.
 
-![Distance error per tape-measured leg](report/img/tape_segments.png)
+| Traversal | Tape | Booster | Legs (lowest) | Legs (sole) |
+| --- | --- | --- | --- | --- |
+| 9 m out | 9 m | 7.39 m (-17.9%) | 8.52 m (-5.4%) | 7.57 m (-15.9%) |
+| 9 m back | 9 m | 7.63 m (-15.2%) | 8.67 m (-3.7%) | 7.71 m (-14.3%) |
+| 6 m out | 6 m | 5.75 m (-4.1%) | 6.47 m (+7.9%) | 6.00 m (+0.1%) |
+| 6 m back | 6 m | 5.35 m (-10.9%) | 6.17 m (+2.9%) | 5.60 m (-6.7%) |
+| 12 m out | 12 m | 10.42 m (-13.2%) | 12.05 m (+0.4%) | 10.65 m (-11.3%) |
+| 12 m back | 12 m | 9.63 m (-19.7%) | 11.81 m (-1.6%) | 10.52 m (-12.3%) |
+| 5 m fwd (x6) | 5 m | 4.74 m (-5.2%) | 5.38 m (+7.6%) | 4.85 m (-3.0%) |
+| 5 m back (x6) | 5 m | 6.65 m (+33.0%) | 5.39 m (+7.9%) | 4.92 m (-1.5%) |
 
-| Leg | Tape | Booster | Legs (lowest) | Legs (sole) |
-|---|---|---|---|---|
-| 9 m out | 9 m | 7.39 m (-18 %) | 8.52 m (-5 %) | 7.57 m (-16 %) |
-| 9 m back | 9 m | 7.63 m (-15 %) | 8.67 m (-4 %) | 7.71 m (-14 %) |
-| 6 m out | 6 m | 5.75 m (-4 %) | 6.47 m (+8 %) | 6.00 m (0 %) |
-| 6 m back | 6 m | 5.35 m (-11 %) | 6.17 m (+3 %) | 5.60 m (-7 %) |
-| 12 m out | 12 m | 10.42 m (-13 %) | 12.05 m (0 %) | 10.65 m (-11 %) |
-| 12 m back | 12 m | 9.63 m (-20 %) | 11.81 m (-2 %) | 10.52 m (-12 %) |
-| 5 m forward (mean of 6) | 5 m | 4.74 m (-5 %) | 5.38 m (+8 %) | 4.85 m (-3 %) |
-| 5 m backward (mean of 6) | 5 m | 6.65 m (+33 %) | 5.39 m (+8 %) | 4.92 m (-2 %) |
-| **Mean abs error** | | **14.9 %** | **4.7 %** | **8.1 %** |
+## Endpoint results
 
-### End point (back to START)
+All values below are discrepancies from the approximate reported endpoint, in metres. For turning, the reference includes the reported 0.46 m diagonal drift; other references are START. Differences near or below 0.3 m are unresolved by the endpoint measurements.
 
-| Test | Time | Booster | Legs (lowest) | Legs (sole) |
-|---|---|---|---|---|
-| 9 / 6 / 12 m out-and-back (tape) | 110 s | 0.96 m | 0.32 m | 0.29 m |
-| Out-and-back legs | 79 s | 0.88 m | 0.20 m | 0.41 m |
-| 6x 5 m forward + 5 m backward | 108 s | 11.4 m | 0.57 m | 0.46 m |
-| 5 turns on the spot, then 5 back | 57 s | 0.28 m | 0.12 m | 0.20 m |
-| Chaotic walking + turning | 70 s | 1.22 m | 0.12 m | 0.16 m |
-| Pushed, blocked, turned in one spot | 81 s | 2.59 m | 0.18 m | 0.46 m |
-| Walking into an obstacle | 83 s | 7.74 m | 0.25 m | 0.32 m |
-| Pulled sideways | 48 s | 0.91 m | 0.40 m | 0.20 m |
-| Standing still | 67 s | 0.00 m | 0.00 m | 0.00 m |
+![Approximate endpoint discrepancies](report/img/end_errors.png)
 
-The real end point is only known to ~0.3 m, so leg errors below that are within the measurement.
 
-### Heading
+| Test | Duration | Booster | Legs (lowest) | Legs (sole) |
+| --- | --- | --- | --- | --- |
+| 9 / 6 / 12 m out-and-back (tape) | 110.1 s | 0.96 m | 0.32 m | 0.29 m |
+| 6x 5 m forward + 5 m backward | 107.5 s | 11.42 m | 0.57 m | 0.46 m |
+| 5 turns on the spot, then 5 back | 57.0 s | 0.28 m | 0.12 m | 0.20 m |
+| Chaotic walking + turning | 70.3 s | 1.22 m | 0.12 m | 0.16 m |
+| Pushed, blocked, turned in one spot | 81.0 s | 2.59 m | 0.18 m | 0.46 m |
+| Walking into an obstacle | 82.7 s | 7.74 m | 0.25 m | 0.32 m |
+| Pulled sideways | 47.7 s | 0.91 m | 0.40 m | 0.20 m |
+| Standing still | 67.2 s | 0.00 m | 0.00 m | 0.00 m |
 
-Both estimates use the same IMU heading, so they are identical here.
+## Individual tests: what we did and what happened
 
-| Test | Turning | Heading error |
-|---|---|---|
-| 5 turns on the spot (at mark m1) | 1800° | -0.4° |
-| Pushed, blocked, turned | 2300° | -1° |
-| Standing still | 0° | 0.05° in 67 s (~3°/hour) |
+Each screenshot was captured from the local app with the playback at the end. The analytical figure underneath adds a clearer map, distance-from-start trace and leg IMU heading. The video's placeholder belongs to that specific test.
 
-The +17° at the end of the turning test was a manual correction by the operator, not an IMU error. For the chaotic
-run (+14° after 3500°) and the 5 m run (+6°) the real final heading was not measured.
 
-## The tests
+### 1. ★ 9 / 6 / 12 m out-and-back (tape)
 
-Video slots: drag the phone videos into the GitHub editor under each test.
+Recording: [`lobby_1025_151300`](runs/lobby_1025_151300) · duration: **110.1 s**.
 
-### 1. 9 / 6 / 12 m out-and-back (tape) · `lobby_1025_151300` (main run)
-Out and back along tape-measured lines of 9 m, 6 m and 12 m from START, turning at each end. 200 steps, ~54 m.
-Booster under-counts every leg by 10-20 % and its legs fan out in heading on the map; leg odometry (lowest) is
-within 5 % on every leg and closes back on START within 0.3 m.
+**What you did:** You walked the K1 out and back along measured 9 m, 6 m and 12 m lines, turning between routes, then returned approximately to START. This is the starred main run; the intended route totals 54 m.
 
-![9/6/12 m out-and-back](report/img/lobby_1025_151300.png)
+**Result:** Lowest is closest on these measured legs. Booster and sole generally underestimate displacement. Lowest has a +7.9% error on the 6 m outward leg, so it is not within 5% on every leg.
 
-Video: _to attach_
 
-### 2. Out-and-back legs · `lobby_1025_150458`
-Three out-and-back legs in different directions, back on START. End error: legs 0.20 m, Booster 0.88 m.
+| Estimate | Endpoint discrepancy | Max distance from START | Estimated path | Final relative heading |
+| --- | --- | --- | --- | --- |
+| Booster | 0.96 m | 10.80 m | 48.53 m | +10.6° |
+| Legs (lowest) | 0.32 m | 12.11 m | 55.26 m | +10.7° |
+| Legs (sole) | 0.29 m | 10.77 m | 49.63 m | +10.7° |
 
-![Out-and-back legs](report/img/lobby_1025_150458.png)
+![App replay map and statistics: 9 / 6 / 12 m out-and-back (tape)](report/img/app_lobby_1025_151300.png)
 
-Video: _to attach_
+![Map, displacement and heading: 9 / 6 / 12 m out-and-back (tape)](report/img/lobby_1025_151300.png)
 
-### 3. 6x 5 m forward + 5 m backward · `5m_front_back`
-5 m forward and 5 m back walking backward (facing the same way the whole time), six times. Booster counts
-forward legs about right but backward legs 33 % too long, so it ends 11.4 m behind START. Leg odometry counts both
-directions the same and ends within ~0.5 m.
+**Video:** _to attach — lobby_1025_151300_
 
-![5 m forward and backward](report/img/5m_front_back.png)
 
-Video: _to attach_
+### 2. 6x 5 m forward + 5 m backward
 
-### 4. 5 turns on the spot, then 5 back · `turn_5_left_5_right`
-Five full turns one way, five the other way, without walking. Heading after the first five turns: -0.4°. The robot
-really drifted ~1.5 ft forward-right while turning; all three estimates got the direction right, Booster
-under-counted it (0.28 m off), legs (lowest) 0.12 m off.
+Recording: [`5m_front_back`](runs/5m_front_back) · duration: **107.5 s**.
 
-![Turning on the spot](report/img/turn_5_left_5_right.png)
+**What you did:** You repeatedly walked 5 m forward and 5 m backward without turning around, finishing approximately at START facing the original direction. Twelve traversals (six forward and six backward) are inferred from trajectory reversals; the repetition count was not independently counted by the operator.
 
-Video: _to attach_
+**Result:** Booster overestimates the backward traversals by about 33%, producing a large residual displacement. Sole is closest on the 5 m traversals; lowest overestimates them by about 8%.
 
-### 5. Chaotic walking + turning · `mix_walk_and_turn`
-Walking and turning at the same time, randomly, ~3500° of turning, back on START. Legs end within 0.12-0.16 m,
-Booster 1.22 m.
 
-![Chaotic walking and turning](report/img/mix_walk_and_turn.png)
+| Estimate | Endpoint discrepancy | Max distance from START | Estimated path | Final relative heading |
+| --- | --- | --- | --- | --- |
+| Booster | 11.42 m | 11.48 m | 69.16 m | +6.0° |
+| Legs (lowest) | 0.57 m | 5.47 m | 65.40 m | +6.2° |
+| Legs (sole) | 0.46 m | 4.70 m | 59.27 m | +6.2° |
 
-Video: _to attach_
+![App replay map and statistics: 6x 5 m forward + 5 m backward](report/img/app_5m_front_back.png)
 
-### 6. Pushed, blocked, turned in one spot · `orientation_stress`
-Pushing the robot and not letting it turn or walk, so it stepped around one spot. Booster "walked" away ~1.1 m in
-5 s while the robot was held and ended 2.6 m off; legs 0.18 m.
+![Map, displacement and heading: 6x 5 m forward + 5 m backward](report/img/5m_front_back.png)
 
-![Pushed and blocked](report/img/orientation_stress.png)
+**Video:** _to attach — 5m_front_back_
 
-Video: _to attach_
 
-### 7. Walking into an obstacle · `continuous_collision`
-The robot kept walking into an obstacle for 83 s. Booster counts the blocked steps as progress and ends 7.7 m off;
-leg odometry sees the feet stay in place (0.25 m; it wanders up to ~1 m while the feet slip against the obstacle).
+### 3. 5 turns on the spot, then 5 back
 
-![Walking into an obstacle](report/img/continuous_collision.png)
+Recording: [`turn_5_left_5_right`](runs/turn_5_left_5_right) · duration: **57.0 s**.
 
-Video: _to attach_
+**What you did:** You made five full turns one way and five the other, with little intended translation. The robot actually moved roughly 1.5 ft (0.46 m) diagonally forward-right. You added a small final steering correction.
 
-### 8. Pulled sideways · `side_pull`
-The robot was pulled sideways while stepping. Legs 0.20-0.40 m, Booster 0.91 m. Leg odometry cannot see a foot
-that slides on the floor, so a hard drag is the case where it would under-count.
+**Result:** The final +17° includes your deliberate correction and should not be called heading drift. At m1, after five turns, IMU heading is about -0.4° relative to its initial direction. That is an estimated residual, conditional on the actual alignment at m1.
 
-![Pulled sideways](report/img/side_pull.png)
 
-Video: _to attach_
+| Estimate | Endpoint discrepancy | Max distance from START | Estimated path | Final relative heading |
+| --- | --- | --- | --- | --- |
+| Booster | 0.28 m | 0.40 m | 10.31 m | +16.9° |
+| Legs (lowest) | 0.12 m | 0.37 m | 2.17 m | +16.8° |
+| Legs (sole) | 0.20 m | 0.43 m | 2.84 m | +16.8° |
 
-### 9. Standing still · `standing`
-67 s standing, not touched. Leg odometry moves less than 1 mm, heading 0.05°. Booster stays at exactly 0 (it only
-counts while walking).
+![App replay map and statistics: 5 turns on the spot, then 5 back](report/img/app_turn_5_left_5_right.png)
 
-![Standing still](report/img/standing.png)
+![Map, displacement and heading: 5 turns on the spot, then 5 back](report/img/turn_5_left_5_right.png)
 
-Video: _to attach_
+**Video:** _to attach — turn_5_left_5_right_
 
-## The tool
 
-The local site (`./k1odom <robot ip>`) records from the robot with Start / Mark / Stop, draws both estimates on a
-live map, and replays every run with the tape numbers, the errors and the phone video.
+### 4. Chaotic walking + turning
 
-![Run page on the site](report/img/site_run.png)
+Recording: [`mix_walk_and_turn`](runs/mix_walk_and_turn) · duration: **70.3 s**.
 
-## Limitations
+**What you did:** You moved and turned simultaneously in a chaotic pattern many times, then returned approximately to the starting position. There was no measured ground-truth trajectory.
 
-- Ground truth for the end points is eyeballed (~0.3 m). Only the 9/6/12 m and 5 m legs are tape-accurate, and those
-  are measured between Mark presses / turning points, so each leg carries some timing error too.
-- The robot walked in Booster's stock walking mode only. Booster's odometer reads ~0 under custom policies, so it
-  cannot be used with our own controllers at all; leg odometry works with any controller.
-- Leg odometry assumes the stance foot does not slide. Sliding (a hard sideways drag, a slippery floor) is counted
-  wrong.
-- One floor (lobby tiles), one robot, one day.
+**Result:** Both leg variants finish close to the reported endpoint; Booster retains a larger offset. The displayed +14° final heading is not an independently measured orientation error.
 
-## Next steps
 
-- One tape-precise test to settle `sole` vs `lowest`: 5 m forward, stop exactly on the mark, 3 times, plus the start
-  and end foot positions taped and measured.
-- Sideways walking, slow vs fast walking, a 2x2 m square with turns on the move, other floors.
-- Fuse the IMU accelerometer with the legs (an EKF) to catch sliding feet.
+| Estimate | Endpoint discrepancy | Max distance from START | Estimated path | Final relative heading |
+| --- | --- | --- | --- | --- |
+| Booster | 1.22 m | 1.87 m | 26.36 m | +14.0° |
+| Legs (lowest) | 0.12 m | 1.69 m | 28.20 m | +14.0° |
+| Legs (sole) | 0.16 m | 1.49 m | 26.39 m | +14.0° |
 
-## Reproduce
+![App replay map and statistics: Chaotic walking + turning](report/img/app_mix_walk_and_turn.png)
 
-```
+![Map, displacement and heading: Chaotic walking + turning](report/img/mix_walk_and_turn.png)
+
+**Video:** _to attach — mix_walk_and_turn_
+
+
+### 5. Pushed, blocked, turned in one spot
+
+Recording: [`orientation_stress`](runs/orientation_stress) · duration: **81.0 s**.
+
+**What you did:** You pushed and restrained the robot, prevented its intended turns and walking, and let it step back and forth around one place. You finished approximately where you started.
+
+**Result:** Booster accumulates substantially more apparent translation than the leg estimates. This is consistent with an odometer that poorly accounts for blocked motion; its internal implementation was not inspected.
+
+
+| Estimate | Endpoint discrepancy | Max distance from START | Estimated path | Final relative heading |
+| --- | --- | --- | --- | --- |
+| Booster | 2.59 m | 3.01 m | 13.46 m | -0.9° |
+| Legs (lowest) | 0.18 m | 0.94 m | 10.67 m | -0.9° |
+| Legs (sole) | 0.46 m | 0.95 m | 10.69 m | -0.9° |
+
+![App replay map and statistics: Pushed, blocked, turned in one spot](report/img/app_orientation_stress.png)
+
+![Map, displacement and heading: Pushed, blocked, turned in one spot](report/img/orientation_stress.png)
+
+**Video:** _to attach — orientation_stress_
+
+
+### 6. Walking into an obstacle
+
+Recording: [`continuous_collision`](runs/continuous_collision) · duration: **82.7 s**.
+
+**What you did:** You repeatedly commanded walking into an obstacle, so the robot stepped under continuous obstruction, then finished approximately at the initial position.
+
+**Result:** Booster ends nearly 7.74 m from the reported endpoint; lowest ends about 0.25 m away. Lowest still wanders up to about 1.12 m from START during the test. Endpoint closure alone does not establish accuracy throughout the collision.
+
+
+| Estimate | Endpoint discrepancy | Max distance from START | Estimated path | Final relative heading |
+| --- | --- | --- | --- | --- |
+| Booster | 7.74 m | 8.42 m | 27.30 m | +52.3° |
+| Legs (lowest) | 0.25 m | 1.12 m | 22.11 m | +52.3° |
+| Legs (sole) | 0.32 m | 1.31 m | 21.03 m | +52.3° |
+
+![App replay map and statistics: Walking into an obstacle](report/img/app_continuous_collision.png)
+
+![Map, displacement and heading: Walking into an obstacle](report/img/continuous_collision.png)
+
+**Video:** _to attach — continuous_collision_
+
+
+### 7. Pulled sideways
+
+Recording: [`side_pull`](runs/side_pull) · duration: **47.7 s**.
+
+**What you did:** You pulled the robot sideways while it was stepping, aiming to finish at the starting point; the final position was within roughly 1 ft of START.
+
+**Result:** Sole has the smaller endpoint residual in this test. Sliding contact is a limitation: the leg estimator assumes its support point stays fixed, so foot slip can produce unobserved motion.
+
+
+| Estimate | Endpoint discrepancy | Max distance from START | Estimated path | Final relative heading |
+| --- | --- | --- | --- | --- |
+| Booster | 0.91 m | 1.92 m | 7.24 m | +15.3° |
+| Legs (lowest) | 0.40 m | 0.61 m | 5.32 m | +15.3° |
+| Legs (sole) | 0.20 m | 0.46 m | 5.03 m | +15.3° |
+
+![App replay map and statistics: Pulled sideways](report/img/app_side_pull.png)
+
+![Map, displacement and heading: Pulled sideways](report/img/side_pull.png)
+
+**Video:** _to attach — side_pull_
+
+
+### 8. Standing still
+
+Recording: [`standing`](runs/standing) · duration: **67.2 s**.
+
+**What you did:** You left the robot standing still and untouched for about 67 seconds.
+
+**Result:** The replay data round the endpoint displacement to 0.000 m for all estimates; leg maximum displacement is below 1 mm in this recording. The IMU heading changes by about 0.05°. This short observation does not establish an hourly drift rate.
+
+
+| Estimate | Endpoint discrepancy | Max distance from START | Estimated path | Final relative heading |
+| --- | --- | --- | --- | --- |
+| Booster | 0.00 m | 0.00 m | 0.00 m | +0.0° |
+| Legs (lowest) | 0.00 m | 0.00 m | 0.01 m | +0.0° |
+| Legs (sole) | 0.00 m | 0.00 m | 0.01 m | +0.0° |
+
+![App replay map and statistics: Standing still](report/img/app_standing.png)
+
+![Map, displacement and heading: Standing still](report/img/standing.png)
+
+**Video:** _to attach — standing_
+
+
+## Turns and orientation
+
+Turning and walking simultaneously are included in the chaotic test, and repeated turns on the spot are included in the five-plus-five test. The leg estimates have small endpoint residuals in both, but there is no independent full-trajectory reference.
+
+At m1 after the first five turns, the leg IMU heading is approximately -0.4° from its starting value. In the push/block test it ends around -1°. These become orientation errors only if the real robot was independently aligned with its starting direction at those moments. The final +17° in the turn test includes your deliberate extra correction. Other final headings should be treated as recorded orientations, not measured errors. During standing, the observed change is about 0.05° over 67 s.
+
+## Collisions, pushes and slipping
+
+During repeated obstruction, Booster's final discrepancy is 7.74 m, versus 0.25 m for lowest and 0.32 m for sole. Under pushing/blocking the corresponding values are 2.59 m, 0.18 m and 0.46 m. These trials show substantially less accumulated endpoint discrepancy for the leg estimates under the tested conditions. They do not prove Booster's internal algorithm or establish a general collision error rate.
+
+Leg odometry depends on a stationary support contact. Sliding and rotating feet violate that assumption. A low final residual can also hide intermediate error: during continuous collision, lowest reaches about 1.12 m from START. Without a measured trajectory, we cannot separate true transient motion from estimator error.
+
+## Limits and remaining tests
+
+- One robot and one lobby floor; these exploratory tests do not establish repeatability across floors, speeds or robots.
+- Most endpoints are approximate (about ±0.3 m); phone videos have not yet been attached or checked against the traces. There is no independent continuous position or heading reference.
+- The 5 m repetition count and turning points are inferred from a leg-estimator trajectory, so this segmentation is not independent ground truth.
+- Keep both contact variants until repeatable tape-measured trials resolve when each is better.
+- Next measurements: three precisely marked forward, backward and sideways trials per speed; an independently measured square route; measured start/end foot positions; synchronized video for every run.
+
+## App, replay and videos
+
+Launch without a robot:
+
+```bash
 cd ~/k1-legodom
-./k1odom 192.168.2.152        # record (robot on Kim-Elecom-5G); the site opens on Live
-./k1odom site                 # browse the runs without the robot
-python3 tools/report_figs.py  # regenerate the figures in report/img
+./k1odom site
 ```
+
+Open [the local app](http://localhost:8790/#run=Lobby__lobby_1025_151300&t=end). Select a run to replay its map and statistics. To collect a new run, launch `./k1odom <robot-ip>`, then use **Start / Mark / Stop & save** on Live.
+
+For each phone video, open the matching run, upload it, pause at a recorded Mark and use **This frame = mark** to synchronize. Uploading a video to the local app saves it locally; it does not put it in GitHub. Add the corresponding GitHub video link in the placeholder under that test when ready.
+
+Rebuild the figures, tables and machine-readable results:
+
+```bash
+python3 make_site.py
+python3 tools/build_report.py
+```
+
+Sources: the saved CSV recordings under `runs/`, each run's `truth.json` operator notes, and the local replay JSON generated by `make_site.py`. [Machine-readable metrics](report/metrics.json) record the values and distance-summary definition used here. App screenshots are stored in `report/img/app_*.png`.
