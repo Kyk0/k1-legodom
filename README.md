@@ -27,6 +27,8 @@ Booster and legs (sole) both under-count distance by ~10-15%. Legs (lowest) (hee
 - `orientation_stress`: pushed, blocked, turned and stepped around one spot, ended about where it started.
   End error: lowest 0.18 m, sole 0.46 m, Booster 2.60 m (Booster "walked" ~1.1 m while the robot was held).
   2300° of turning, heading back to -1°.
+- `standing`: 67 s standing still. Legs drift < 0.5 mm, Booster stays at exactly 0 (it only counts while
+  walking), heading drift 0.05° (~3°/hour).
 
 ## Launch
 ```
