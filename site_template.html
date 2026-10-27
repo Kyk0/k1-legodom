@@ -375,6 +375,7 @@ async function openRun(id) {
           <tr><th>Estimate</th><th>End x, y</th><th>Yaw</th><th>Far</th><th>Path</th>${truth.far ? "<th>Far err</th>" : ""}${truth.end ? "<th>End err</th>" : ""}</tr>
           ${EST.map(rowFor).join("")}
         </table></div>
+        ${segmentsCard(r)}
       </div>
     </div>`;
   if (r.group === "Lobby") bindTruthForm(r.id);
@@ -405,6 +406,30 @@ async function openRun(id) {
   buildViews(); draw();
 }
 
+// straight-line distance and direction between consecutive marks, per estimate: e.g. start -> 5 m left
+// -> back, so left and right legs can be compared with each other and with the tape
+function segmentsCard(r) {
+  if (r.marks.length < 2) return "";
+  const ms = r.marks.slice().sort((a, b) => a.t - b.t);
+  const seg = (k, a, b) => {
+    const s = r.series[k], i = idx(a.t), j = idx(b.t);
+    const dx = s.x[j] - s.x[i], dy = s.y[j] - s.y[i];
+    return { d: Math.hypot(dx, dy), ang: Math.atan2(dy, dx) * 180 / Math.PI };
+  };
+  const dir = a => a > 45 && a < 135 ? "left" : a < -45 && a > -135 ? "right" : Math.abs(a) <= 45 ? "fwd" : "back";
+  const rows = [];
+  for (let n = 0; n + 1 < ms.length; n++) {
+    const a = ms[n], b = ms[n + 1], bo = seg("booster", a, b), le = seg("sole", a, b);
+    if (bo.d < 0.2 && le.d < 0.2) continue;   // standing between two marks
+    rows.push(`<tr><td>${a.label} → ${b.label}</td><td>${(b.t - a.t).toFixed(0)} s</td>
+      <td>${bo.d.toFixed(2)} m · ${bo.ang.toFixed(0)}°</td><td>${le.d.toFixed(2)} m · ${le.ang.toFixed(0)}° <span class="hint">${dir(le.ang)}</span></td>
+      <td>${(le.d - bo.d >= 0 ? "+" : "") + (le.d - bo.d).toFixed(2)} m</td></tr>`);
+  }
+  if (!rows.length) return "";
+  return `<div class="card tablewrap"><b>Segments between marks</b>
+    <table style="margin-top:6px"><tr><th>Segment</th><th>Time</th><th>Booster</th><th>Legs (sole)</th><th>Δ</th></tr>${rows.join("")}</table>
+    <div class="hint">Straight-line distance and direction (0° = forward at START, +90° = left) from one mark to the next. Compare with the tape.</div></div>`;
+}
 function clampT(t) { return Math.max(0, Math.min(RUN.seconds, t)); }
 function seek(t) {
   state.t = clampT(t);
