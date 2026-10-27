@@ -392,5 +392,23 @@
         "note": "standing still, not touched"
       }
     }
+  },
+  "endpoint_summary_7_moving_tests": {
+    "booster": {
+      "median_m": 1.223,
+      "maximum_m": 11.416
+    },
+    "lowest": {
+      "median_m": 0.248,
+      "maximum_m": 0.573
+    },
+    "sole": {
+      "median_m": 0.29,
+      "maximum_m": 0.464
+    }
+  },
+  "operator_observation": {
+    "endpoint_uncertainty_m_approx": 0.3,
+    "heading_note": "Small differences around 5 degrees may be visually unnoticed; this is not a calibrated angular uncertainty or a correction."
   }
 }

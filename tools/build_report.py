@@ -12,14 +12,14 @@ ROOT = Path(__file__).resolve().parent.parent
 KEYS = ['booster', 'lowest', 'sole']
 NAMES = ['Booster', 'Legs (lowest)', 'Legs (sole)']
 DESCRIPTIONS = {
-'lobby_1025_151300': ('You walked the K1 out and back along measured 9 m, 6 m and 12 m lines, turning between routes, then returned approximately to START. This is the starred main run; the intended route totals 54 m.', 'Lowest is closest on these measured legs. Booster and sole generally underestimate displacement. Lowest has a +7.9% error on the 6 m outward leg, so it is not within 5% on every leg.'),
-'5m_front_back': ('You repeatedly walked 5 m forward and 5 m backward without turning around, finishing approximately at START facing the original direction. Twelve traversals (six forward and six backward) are inferred from trajectory reversals; the repetition count was not independently counted by the operator.', 'Booster overestimates the backward traversals by about 33%, producing a large residual displacement. Sole is closest on the 5 m traversals; lowest overestimates them by about 8%.'),
-'turn_5_left_5_right': ('You made five full turns one way and five the other, with little intended translation. The robot actually moved roughly 1.5 ft (0.46 m) diagonally forward-right. You added a small final steering correction.', 'The final +17° includes your deliberate correction and should not be called heading drift. At m1, after five turns, IMU heading is about -0.4° relative to its initial direction. That is an estimated residual, conditional on the actual alignment at m1.'),
-'mix_walk_and_turn': ('You moved and turned simultaneously in a chaotic pattern many times, then returned approximately to the starting position. There was no measured ground-truth trajectory.', 'Both leg variants finish close to the reported endpoint; Booster retains a larger offset. The displayed +14° final heading is not an independently measured orientation error.'),
-'orientation_stress': ('You pushed and restrained the robot, prevented its intended turns and walking, and let it step back and forth around one place. You finished approximately where you started.', 'Booster accumulates substantially more apparent translation than the leg estimates. This is consistent with an odometer that poorly accounts for blocked motion; its internal implementation was not inspected.'),
-'continuous_collision': ('You repeatedly commanded walking into an obstacle, so the robot stepped under continuous obstruction, then finished approximately at the initial position.', 'Booster ends nearly 7.74 m from the reported endpoint; lowest ends about 0.25 m away. Lowest still wanders up to about 1.12 m from START during the test. Endpoint closure alone does not establish accuracy throughout the collision.'),
-'side_pull': ('You pulled the robot sideways while it was stepping, aiming to finish at the starting point; the final position was within roughly 1 ft of START.', 'Sole has the smaller endpoint residual in this test. Sliding contact is a limitation: the leg estimator assumes its support point stays fixed, so foot slip can produce unobserved motion.'),
-'standing': ('You left the robot standing still and untouched for about 67 seconds.', 'The replay data round the endpoint displacement to 0.000 m for all estimates; leg maximum displacement is below 1 mm in this recording. The IMU heading changes by about 0.05°. This short observation does not establish an hourly drift rate.'),
+'lobby_1025_151300': ('The operator walked the K1 out and back along measured 9 m, 6 m and 12 m lines, turning between routes, then returned approximately to START. This is the starred main run; the intended route totals 54 m.', 'Lowest is closest on these measured legs. Booster and sole generally underestimate displacement. Its largest single-leg distance error is +7.9% on the 6 m outward traversal.'),
+'5m_front_back': ('The operator repeatedly walked 5 m forward and 5 m backward without turning around, finishing approximately at START facing the original direction. Twelve traversals (six forward and six backward) are inferred from trajectory reversals; the repetition count was not independently counted by the operator.', 'Booster overestimates the backward traversals by about 33%, producing a large residual displacement. Sole is closest on the 5 m traversals; lowest overestimates them by about 8%.'),
+'turn_5_left_5_right': ('The operator made five full turns one way and five the other, with little intended translation. The robot actually moved roughly 1.5 ft (0.46 m) diagonally forward-right. The operator added a small final steering correction.', 'The final +17° includes the operator’s deliberate correction and should not be called heading drift. At m1, after five turns, IMU heading is about -0.4° relative to its initial direction. That is an estimated residual, conditional on the actual alignment at m1.'),
+'mix_walk_and_turn': ('The operator moved and turned simultaneously in a chaotic pattern many times, then returned approximately to the starting position. There was no measured ground-truth trajectory.', 'Both leg variants finish close to the reported endpoint; Booster retains a larger offset. The displayed +14° final heading is not an independently measured orientation error.'),
+'orientation_stress': ('The operator pushed and restrained the robot, prevented its intended turns and walking, and let it step back and forth around one place. The operator finished approximately where you started.', 'Booster accumulates substantially more apparent translation than the leg estimates. This is consistent with an odometer that poorly accounts for blocked motion; its internal implementation was not inspected.'),
+'continuous_collision': ('The operator repeatedly commanded walking into an obstacle, so the robot stepped under continuous obstruction, then finished approximately at the initial position.', 'Booster ends nearly 7.74 m from the reported endpoint; lowest ends about 0.25 m away. Lowest still wanders up to about 1.12 m from START during the test. Endpoint closure alone does not establish accuracy throughout the collision.'),
+'side_pull': ('The operator pulled the robot sideways while it was stepping, aiming to finish at the starting point; the final position was within roughly 1 ft of START.', 'Sole has the smaller endpoint residual in this test. Sliding contact is a limitation: the leg estimator assumes its support point stays fixed, so foot slip can produce unobserved motion.'),
+'standing': ('The operator left the robot standing still and untouched for about 67 seconds.', 'The replay data round the endpoint displacement to 0.000 m for all estimates; leg maximum displacement is below 1 mm in this recording. The IMU heading changes by about 0.05°. This short observation does not establish an hourly drift rate.'),
 }
 
 def table(headers, rows):
@@ -33,27 +33,39 @@ def build():
  # Same eight comparison rows as the plot: six individual legs plus two direction means.
  metrics={'distance_error_definition':'100*(estimated straight-line leg displacement - tape length)/tape length', 'distance_comparison_rows':labels,'signed_distance_error_percent':errs,'mean_absolute_percent_across_8_rows':means,'runs':{n:{'seconds':d['seconds'],'stats':d['stats'],'reported_truth':d['truth']} for n,d in ds.items()}}
  (ROOT/'report/metrics.json').write_text(json.dumps(metrics,indent=2)+'\n')
- parts=['''# K1 legged odometry: lobby test report
+ dynamic = [d for n,d in ds.items() if n != 'standing']
+ endpoint_summary = {k: {'median_m': float(np.median([d['stats'][k]['end_err'] for d in dynamic])), 'maximum_m': max(d['stats'][k]['end_err'] for d in dynamic)} for k in KEYS}
+ metrics['endpoint_summary_7_moving_tests'] = endpoint_summary
+ metrics['operator_observation'] = {'endpoint_uncertainty_m_approx': 0.3, 'heading_note': 'Small differences around 5 degrees may be visually unnoticed; this is not a calibrated angular uncertainty or a correction.'}
+ (ROOT/'report/metrics.json').write_text(json.dumps(metrics,indent=2)+'\n')
+ parts=['''# K1 legged odometry: lobby evaluation report
 
 Tests: October 25–26, 2026 · [code and recordings](https://github.com/Kyk0/k1-legodom)
 
-We drove the K1 with the remote in Booster's stock walking mode and recorded Booster's built-in odometer alongside our leg odometry. We tested measured out-and-back walking, backward walking, turns, pushes, continuous obstruction, sideways pulling and standing still.
+## Summary
 
-The starred **9 / 6 / 12 m run** is the main distance test. This report covers eight identified tests. The unidentified earlier out-and-back recording is excluded from the report and summary figures.
+Eight identified lobby tests compared Booster's built-in odometer with joint-angle and IMU leg odometry while the K1 was operated by remote in stock walking mode. Leg odometry showed lower endpoint discrepancies during blocked motion, backward walking and combined walking/turning. Mean absolute distance error across the eight measured-distance comparison rows was **4.7% for lowest, 8.1% for sole and 14.9% for Booster**. Lowest performed better on the starred 9/6/12 m route; sole performed better on the repeated 5 m forward/backward route.
 
-## How much deviation / what is the error rate?
+Final positions were judged by eye to about **0.3 m**. Small heading differences, around **5°**, can also look almost unchanged to the operator. Some observed residuals may therefore reflect imperfect physical return or alignment rather than estimator drift; no fixed amount has been subtracted from the measurements.
 
-There are two different measurements:
-
-- **Distance error:** difference between an estimated leg displacement and the tape-measured distance, divided by that measured distance. This tests distance scale.
-- **Endpoint discrepancy:** distance between the estimated final position and the reported final position. Most final positions were judged by eye, within roughly 1 ft (0.3 m) of START. These are approximate closure results, not precise ground-truth errors. Opposite errors can cancel on an out-and-back route.
+## Overall results
 ''']
+ parts.append(table(['Overall statistic','Booster','Legs (lowest)','Legs (sole)'],[
+ ['Mean absolute distance error, 8 comparison rows']+[f'{means[k]:.1f}%' for k in KEYS],
+ ['Median endpoint discrepancy, 7 moving tests']+[f"{endpoint_summary[k]['median_m']:.2f} m" for k in KEYS],
+ ['Largest endpoint discrepancy, 7 moving tests']+[f"{endpoint_summary[k]['maximum_m']:.2f} m" for k in KEYS]]))
+ parts.append('The distance average equally weights six individual 9/6/12 m traversals and two direction averages from the repeated 5 m test. Endpoint statistics exclude standing and compare against approximate reported final positions. These summarize this test set; they are not a general accuracy guarantee.')
+ parts.append('## Test overview\n\nEndpoint discrepancies below are in metres. All tests aimed to return to START except the turn test, whose reference includes the reported 0.46 m forward-right displacement.')
+ parts.append(table(['Test','Duration','Booster','Legs (lowest)','Legs (sole)'],[[('★ ' if n == 'lobby_1025_151300' else '')+title,f'{ds[n]["seconds"]:.1f} s']+[f'{ds[n]["stats"][k]["end_err"]:.2f}' for k in KEYS] for n,title in figs.RUNS]))
+ parts.append('''## Distance accuracy
+
+Distance error is the estimated straight-line traversal displacement minus the tape-measured length, divided by that length. Endpoint discrepancy instead measures the separation between the estimated and reported final positions. Small closure residuals do not guarantee an accurate trajectory, because opposite errors can cancel.
+''')
  parts.append(table(['Distance comparison','Booster','Legs (lowest)','Legs (sole)'],[
- ['Mean absolute percentage, 8 comparison rows']+[f'{means[k]:.1f}%' for k in KEYS],
  ['9/6/12 m test, mean absolute percentage']+[f'{np.mean(np.abs(errs[k][:6])):.1f}%' for k in KEYS],
  ['5 m forward, signed distance error']+[f'{errs[k][6]:+.1f}%' for k in KEYS],
  ['5 m backward, signed distance error']+[f'{errs[k][7]:+.1f}%' for k in KEYS]]))
- parts.append('''The eight-row average gives equal weight to six individual 9/6/12 m traversals and two direction averages from the repeated 5 m test. It is a descriptive summary, **not** an error rate across eight independent trials or every sample. Neither contact variant is consistently best: lowest is better on the long measured routes; sole is better on the 5 m forward/backward test.
+ parts.append('''The contact model affects distance scale differently across the two measured walking tests. Both variants are retained in the evaluation.
 
 ![Distance error against measured lengths](report/img/tape_segments.png)
 
@@ -79,18 +91,18 @@ Tape lengths were reported as 9 m, 6 m, 12 m and 5 m. Long-route boundaries use 
  parts.append(table(['Traversal','Tape','Booster','Legs (lowest)','Legs (sole)'],rows))
  parts.append('''## Endpoint results
 
-All values below are discrepancies from the approximate reported endpoint, in metres. For turning, the reference includes the reported 0.46 m diagonal drift; other references are START. Differences near or below 0.3 m are unresolved by the endpoint measurements.
+All values below are discrepancies from the approximate reported endpoint, in metres. For turning, the reference includes the reported 0.46 m diagonal drift; other references are START. Differences near or below 0.3 m are unresolved by the endpoint measurements. Returning close to, rather than exactly onto, START can account for part of the observed discrepancy. For example, a 0.25 m residual could be entirely explained by a physical return within 0.3 m of START. Without a measured final position, the size and direction of this contribution are unknown; the report therefore retains the observed residuals.
 
 ![Approximate endpoint discrepancies](report/img/end_errors.png)
 ''')
- parts.append(table(['Test','Duration','Booster','Legs (lowest)','Legs (sole)'],[[title,f'{ds[n]["seconds"]:.1f} s']+[f'{ds[n]["stats"][k]["end_err"]:.2f} m' for k in KEYS] for n,title in figs.RUNS]))
- parts.append('''## Individual tests: what we did and what happened
+ # Endpoint numbers are listed once in the overview above.
+ parts.append('''## Test descriptions and evidence
 
 Each screenshot was captured from the local app with the playback at the end. The analytical figure underneath adds a clearer map, distance-from-start trace and leg IMU heading. The video's placeholder belongs to that specific test.
 ''')
  for num,(n,title) in enumerate(figs.RUNS,1):
   d=ds[n]; desc,result=DESCRIPTIONS[n]
-  parts.append(f'### {num}. '+('★ ' if num==1 else '')+title+f'\n\nRecording: [`{n}`](runs/{n}) · duration: **{d["seconds"]:.1f} s**.\n\n**What you did:** {desc}\n\n**Result:** {result}\n')
+  parts.append(f'### {num}. '+('★ ' if num==1 else '')+title+f'\n\nRecording: [`{n}`](runs/{n}) · duration: **{d["seconds"]:.1f} s**.\n\n**Procedure:** {desc}\n\n**Result:** {result}\n')
   rows=[]
   for k,label in zip(KEYS,NAMES):
    s=d['stats'][k];rows.append([label,f'{s["end_err"]:.2f} m',f'{s["far"]:.2f} m',f'{s["path"]:.2f} m',f'{s["yaw"]:+.1f}°'])
@@ -100,7 +112,7 @@ Each screenshot was captured from the local app with the playback at the end. Th
 
 Turning and walking simultaneously are included in the chaotic test, and repeated turns on the spot are included in the five-plus-five test. The leg estimates have small endpoint residuals in both, but there is no independent full-trajectory reference.
 
-At m1 after the first five turns, the leg IMU heading is approximately -0.4° from its starting value. In the push/block test it ends around -1°. These become orientation errors only if the real robot was independently aligned with its starting direction at those moments. The final +17° in the turn test includes your deliberate extra correction. Other final headings should be treated as recorded orientations, not measured errors. During standing, the observed change is about 0.05° over 67 s.
+At m1 after the first five turns, the leg IMU heading is approximately -0.4° from its starting value. In the push/block test it ends around -1°. The operator reported that small differences around 5° are difficult to notice, so “facing the same way” does not establish exact alignment. These residuals cannot be assigned entirely to estimator error without an independent heading reference. The final +17° in the turn test includes the operator’s deliberate extra correction. Other final headings should be treated as recorded orientations, not measured errors. During standing, the observed change is about 0.05° over 67 s. A residual of roughly 5° can be consistent with visually similar start/end headings. This observation does not justify automatically deducting 5° from every reading.
 
 ## Collisions, pushes and slipping
 
@@ -138,6 +150,6 @@ python3 tools/build_report.py
 
 Sources: the saved CSV recordings under `runs/`, each run's `truth.json` operator notes, and the local replay JSON generated by `make_site.py`. [Machine-readable metrics](report/metrics.json) record the values and distance-summary definition used here. App screenshots are stored in `report/img/app_*.png`.
 ''')
- (ROOT/'REPORT.md').write_text('\n\n'.join(parts).rstrip()+'\n')
+ (ROOT/'REPORT.md').write_text('\n\n'.join(part.strip() for part in parts).rstrip()+'\n')
  print('Updated REPORT.md and report/metrics.json')
 if __name__=='__main__': build()
