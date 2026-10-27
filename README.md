@@ -7,17 +7,26 @@ Two estimates, recorded together while the robot walks in Booster's normal walki
 The robot side only listens. It never sends commands.
 
 ## Main run: `runs/lobby_1025_151300` (2026-10-25)
-The run that counts (named in `runs/MAIN`, ★ on the site). 110 s, 200 steps, ~49 m walked: three out-and-back
-legs from START (~7.5, ~5.5 and ~10.5 m), back to START after each.
+The run that counts (named in `runs/MAIN`, ★ on the site). Tape-measured out-and-back legs from START:
+9 m, turn, 6 m, then 12 m (54 m in total), back on START at the end. 110 s, 200 steps.
 
-| Estimate | Farthest | Path | End (x, y) from START | End distance from START |
-|---|---|---|---|---|
-| Booster odometer | 10.80 m | 48.5 m | (-0.88, 0.37) | 0.95 m |
-| Legs (sole) | 10.77 m | 49.6 m | (-0.14, -0.25) | 0.29 m |
-| Legs (lowest) | 12.11 m | 55.3 m | (-0.21, -0.24) | 0.32 m |
+Each leg is measured between the Mark presses (m1..m6), straight line, against the tape:
 
-No tape numbers entered yet. If the robot ended on START, the end distance is the error: legs 0.29 m (0.6% of
-the path) against Booster 0.95 m (1.9%). On the map Booster's out-and-back lines also fan out in heading; ours stay on one line.
+| Estimate | 9 out | 9 back | 6 out | 6 back | 12 out | 12 back | Mean abs error | Path (54 m) | End error |
+|---|---|---|---|---|---|---|---|---|---|
+| Booster odometer | 7.39 | 7.63 | 5.75 | 5.35 | 10.42 | 9.63 | 13.5% | 48.5 m | 0.96 m |
+| Legs (sole) | 7.57 | 7.71 | 6.00 | 5.60 | 10.65 | 10.52 | 10.1% | 49.6 m | 0.29 m |
+| **Legs (lowest)** | 8.52 | 8.67 | 6.47 | 6.17 | 12.05 | 11.81 | **3.6%** | 55.3 m | 0.32 m |
+
+Booster and legs (sole) both under-count distance by ~10-15%. Legs (lowest) (heel / sole / toe pivot) is within
+~4% and the best of the three. Going back to START, both leg variants end ~0.3 m off against ~1 m for Booster.
+
+## Other lobby tests (2026-10-26, eyeballed truth)
+- `turn_5_left_5_right`: 5 turns one way, 5 back, on the spot. Heading -0.4° after 1800°. Real drift ~1.5 ft
+  forward-right: lowest 0.12 m error, sole 0.20 m, Booster 0.28 m. The final +17° was a manual correction.
+- `orientation_stress`: pushed, blocked, turned and stepped around one spot, ended about where it started.
+  End error: lowest 0.18 m, sole 0.46 m, Booster 2.60 m (Booster "walked" ~1.1 m while the robot was held).
+  2300° of turning, heading back to -1°.
 
 ## Launch
 ```
