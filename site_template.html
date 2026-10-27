@@ -105,8 +105,8 @@ video { width: 100%; border-radius: 8px; background: #000; display: block; }
 <script>
 const EST = [
   { k: "booster", name: "Booster odometer", c: "--booster", w: 2.2 },
-  { k: "sole",    name: "Legs (sole)",      c: "--sole",    w: 2.2 },
-  { k: "lowest",  name: "Legs (lowest)",    c: "--lowest",  w: 1.4, dash: "5 4" },
+  { k: "lowest",  name: "Legs (lowest)",    c: "--sole",    w: 2.2 },
+  { k: "sole",    name: "Legs (sole)",      c: "--lowest",  w: 1.4, dash: "5 4" },
 ];
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const $ = s => document.querySelector(s);
@@ -125,7 +125,7 @@ async function loadIndex() {
   $("#runlist").innerHTML = order.map(g => `
     <details ${g === "Lobby" ? "open" : ""}><summary>${g}<span>${groups[g].length}</span></summary>
       ${groups[g].sort((a, b) => (b.main - a.main) || a.name.localeCompare(b.name, undefined, { numeric: true })).map(r =>
-        `<div class="run" data-id="${r.id}">${r.main ? "★ " : ""}${r.name}<small>${f2(r.stats.sole.far)} m</small></div>`).join("")}
+        `<div class="run" data-id="${r.id}">${r.main ? "★ " : ""}${r.name}<small>${f2(r.stats.lowest.far)} m</small></div>`).join("")}
     </details>`).join("");
   document.querySelectorAll(".run").forEach(e => e.onclick = () => go(e.dataset.id));
 }
@@ -172,7 +172,7 @@ async function livePage() {
     <div class="grid2">
       <div class="card">
         <div class="legend"><span><span class="sw" style="background:var(--booster)"></span>Booster odometer</span>
-          <span><span class="sw" style="background:var(--sole)"></span>Legs (sole)</span><span>○ marks</span></div>
+          <span><span class="sw" style="background:var(--sole)"></span>Legs</span><span>○ marks</span></div>
         <svg id="lmap"></svg>
       </div>
       <div class="stack">
@@ -272,7 +272,7 @@ function drawLive() {
   el("rect", { x: sx - 5, y: sy - 5, width: 10, height: 10, fill: css("--truth") }, svg);
   el("text", { x: sx + 8, y: sy + 14 }, svg).textContent = "start";
   const nums = [];
-  [["b", "--booster", "Booster odometer"], ["l", "--sole", "Legs (sole)"]].forEach(([k, c, name]) => {
+  [["b", "--booster", "Booster odometer"], ["l", "--sole", "Legs"]].forEach(([k, c, name]) => {
     const pts = S.filter(p => p[k]);
     if (!pts.length) { nums.push(`<div><span class="sw" style="background:var(${c})"></span>${name}<br>–</div>`); return; }
     const d = pts.map((p, i) => (i ? "L" : "M") + P(p[k][0], p[k][1]).map(v => v.toFixed(1)).join(",")).join("");
@@ -297,7 +297,7 @@ function drawLive() {
 function overview() {
   RUN = null; state.playing = false;
   const withTruth = INDEX.filter(r => r.truth && (r.truth.far || r.truth.end));
-  const ratios = INDEX.filter(r => r.stats.booster.far > 0.5).map(r => r.stats.sole.far / r.stats.booster.far);
+  const ratios = INDEX.filter(r => r.stats.booster.far > 0.5).map(r => r.stats.lowest.far / r.stats.booster.far);
   const mean = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : null;
   const median = a => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
   const errMean = k => mean(withTruth.filter(r => r.truth.far).map(r => Math.abs(r.stats[k].far_err) / r.truth.far * 100));
@@ -312,17 +312,17 @@ function overview() {
       ${kpi(withTruth.length, "runs with tape truth")}
       ${kpi(ratios.length ? median(ratios).toFixed(3) + "×" : "–", "legs / Booster farthest distance, median")}
       ${kpi(errMean("booster") == null ? "–" : errMean("booster").toFixed(1) + "%", "Booster |far error| vs tape")}
-      ${kpi(errMean("sole") == null ? "–" : errMean("sole").toFixed(1) + "%", "Legs |far error| vs tape")}
+      ${kpi(errMean("lowest") == null ? "–" : errMean("lowest").toFixed(1) + "%", "Legs |far error| vs tape")}
     </div>
     <div class="card tablewrap"><table>
       <tr><th>Run</th><th>Group</th><th>s</th><th>Tape far</th><th>Booster far</th><th>Legs far</th><th>Legs / Booster</th>
           <th>Booster far err</th><th>Legs far err</th><th>Booster end err</th><th>Legs end err</th><th>Video</th></tr>
       ${rows.map(r => `<tr class="click" data-id="${r.id}"><td>${r.main ? "★ " : ""}${r.name}</td><td>${r.group}</td><td>${r.seconds.toFixed(0)}</td>
         <td>${r.truth && r.truth.far ? r.truth.far.toFixed(2) : "–"}</td>
-        <td>${f2(r.stats.booster.far)}</td><td>${f2(r.stats.sole.far)}</td>
-        <td>${r.stats.booster.far > 0.5 ? (r.stats.sole.far / r.stats.booster.far).toFixed(3) : "–"}</td>
-        <td>${err(r, "booster", "far_err")}</td><td>${err(r, "sole", "far_err")}</td>
-        <td>${err(r, "booster", "end_err")}</td><td>${err(r, "sole", "end_err")}</td>
+        <td>${f2(r.stats.booster.far)}</td><td>${f2(r.stats.lowest.far)}</td>
+        <td>${r.stats.booster.far > 0.5 ? (r.stats.lowest.far / r.stats.booster.far).toFixed(3) : "–"}</td>
+        <td>${err(r, "booster", "far_err")}</td><td>${err(r, "lowest", "far_err")}</td>
+        <td>${err(r, "booster", "end_err")}</td><td>${err(r, "lowest", "end_err")}</td>
         <td>${r.video ? "yes" : ""}</td></tr>`).join("")}
     </table></div>`;
   document.querySelectorAll("tr.click").forEach(e => e.onclick = () => go(e.dataset.id));
@@ -419,7 +419,7 @@ function segmentsCard(r) {
   const dir = a => a > 45 && a < 135 ? "left" : a < -45 && a > -135 ? "right" : Math.abs(a) <= 45 ? "fwd" : "back";
   const rows = [];
   for (let n = 0; n + 1 < ms.length; n++) {
-    const a = ms[n], b = ms[n + 1], bo = seg("booster", a, b), le = seg("sole", a, b);
+    const a = ms[n], b = ms[n + 1], bo = seg("booster", a, b), le = seg("lowest", a, b);
     if (bo.d < 0.2 && le.d < 0.2) continue;   // standing between two marks
     rows.push(`<tr><td>${a.label} → ${b.label}</td><td>${(b.t - a.t).toFixed(0)} s</td>
       <td>${bo.d.toFixed(2)} m · ${bo.ang.toFixed(0)}°</td><td>${le.d.toFixed(2)} m · ${le.ang.toFixed(0)}° <span class="hint">${dir(le.ang)}</span></td>
@@ -427,7 +427,7 @@ function segmentsCard(r) {
   }
   if (!rows.length) return "";
   return `<div class="card tablewrap"><b>Segments between marks</b>
-    <table style="margin-top:6px"><tr><th>Segment</th><th>Time</th><th>Booster</th><th>Legs (sole)</th><th>Δ</th></tr>${rows.join("")}</table>
+    <table style="margin-top:6px"><tr><th>Segment</th><th>Time</th><th>Booster</th><th>Legs (lowest)</th><th>Δ</th></tr>${rows.join("")}</table>
     <div class="hint">Straight-line distance and direction (0° = forward at START, +90° = left) from one mark to the next. Compare with the tape.</div></div>`;
 }
 function clampT(t) { return Math.max(0, Math.min(RUN.seconds, t)); }

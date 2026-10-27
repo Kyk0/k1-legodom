@@ -19,7 +19,7 @@ Each leg is measured between the Mark presses (m1..m6), straight line, against t
 | **Legs (lowest)** | 8.52 | 8.67 | 6.47 | 6.17 | 12.05 | 11.81 | **3.6%** | 55.3 m | 0.32 m |
 
 Booster and legs (sole) both under-count distance by ~10-15%. Legs (lowest) (heel / sole / toe pivot) is within
-~4% and the best of the three. Going back to START, both leg variants end ~0.3 m off against ~1 m for Booster.
+~4% and the best of the three, so it is the default everywhere since 2026-10-26 (live numbers, site, tables). Going back to START, both leg variants end ~0.3 m off against ~1 m for Booster.
 
 ## Other lobby tests (2026-10-26, eyeballed truth)
 - `turn_5_left_5_right`: 5 turns one way, 5 back, on the spot. Heading -0.4° after 1800°. Real drift ~1.5 ft

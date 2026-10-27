@@ -51,7 +51,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("name", nargs="?", default=datetime.now().strftime("odom_%Y%m%d_%H%M%S"))
     ap.add_argument("--outdir", default=str(Path(__file__).resolve().parent / "runs"))
-    ap.add_argument("--contact", default="sole", choices=["sole", "lowest"],
+    ap.add_argument("--contact", default="lowest", choices=["sole", "lowest"],
                     help="leg-odometry contact model for the LIVE numbers (the plot computes both)")
     ap.add_argument("--stream", action="store_true", help="machine-readable pose lines for the site")
     args = ap.parse_args()
