@@ -404,6 +404,8 @@ async function openRun(id) {
     v.onseeked = () => { if (!state.playing) { state.t = clampT(v.currentTime + r.video.offset); draw(); } };
   }
   buildViews(); draw();
+  const tq = location.hash.match(/[&]t=([0-9.]+|end)/);   // #run=ID&t=end opens the run at that time
+  if (tq) seek(tq[1] === "end" ? r.seconds : +tq[1]);
 }
 
 // straight-line distance and direction between consecutive marks, per estimate: e.g. start -> 5 m left

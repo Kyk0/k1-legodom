@@ -6,6 +6,8 @@ Two estimates, recorded together while the robot walks in Booster's normal walki
 
 The robot side only listens. It never sends commands.
 
+**Full write-up with figures: [REPORT.md](REPORT.md).**
+
 ## Main run: `runs/lobby_1025_151300` (2026-10-25)
 The run that counts (named in `runs/MAIN`, ★ on the site). Tape-measured out-and-back legs from START:
 9 m, turn, 6 m, then 12 m (54 m in total), back on START at the end. 110 s, 200 steps.
@@ -34,12 +36,12 @@ Every run ended back about where it started (within ~1 ft / 0.3 m, eyeballed), e
 | `standing` | 67 s standing still | 67 | 0.00 | 0.00 | 0.00 |
 | `continuous_collision` | walking into an obstacle the whole time | 83 | 7.74 | 0.25 | 0.32 |
 | `side_pull` | pulled sideways | 48 | 0.91 | 0.40 | 0.20 |
-| `5m_front_back` | 6x 5 m forward + 5 m backward, no turning | 108 | 11.5 | 0.58 | 0.46 |
+| `5m_front_back` | 6x 5 m forward + 5 m backward, no turning | 108 | 11.4 | 0.57 | 0.46 |
 | `mix_walk_and_turn` | chaotic walking and turning at once, back on START | 70 | 1.22 | 0.12 | 0.16 |
 
 With the truth good to ~0.3 m, the leg estimates are within that on every run; Booster is off by up to 7.7 m.
 Booster counts steps the robot tries to take, so it keeps "walking" when the robot is blocked or held.
-`5m_front_back`, per 5 m leg (mean of 6): Booster forward 4.74 m (-5%) but backward 6.65 m (+33%), so it ends 11.5 m
+`5m_front_back`, per 5 m leg (mean of 6): Booster forward 4.74 m (-5%) but backward 6.65 m (+33%), so it ends 11.4 m
 behind START. Legs are the same both ways: sole 4.85 / 4.92 m (-3% / -2%), lowest 5.38 / 5.39 m (+8%). Here sole is
 closer, on the 9/6/12 m run lowest was (-4% vs -10%): the true value sits between the two leg variants.
 Heading (IMU, shared by both): -0.4° after 5 turns, -1° after 2300° of turning, 0.05°/min standing.
