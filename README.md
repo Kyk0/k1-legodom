@@ -21,14 +21,23 @@ Each leg is measured between the Mark presses (m1..m6), straight line, against t
 Booster and legs (sole) both under-count distance by ~10-15%. Legs (lowest) (heel / sole / toe pivot) is within
 ~4% and the best of the three, so it is the default everywhere since 2026-10-26 (live numbers, site, tables). Going back to START, both leg variants end ~0.3 m off against ~1 m for Booster.
 
-## Other lobby tests (2026-10-26, eyeballed truth)
-- `turn_5_left_5_right`: 5 turns one way, 5 back, on the spot. Heading -0.4° after 1800°. Real drift ~1.5 ft
-  forward-right: lowest 0.12 m error, sole 0.20 m, Booster 0.28 m. The final +17° was a manual correction.
-- `orientation_stress`: pushed, blocked, turned and stepped around one spot, ended about where it started.
-  End error: lowest 0.18 m, sole 0.46 m, Booster 2.60 m (Booster "walked" ~1.1 m while the robot was held).
-  2300° of turning, heading back to -1°.
-- `standing`: 67 s standing still. Legs drift < 0.5 mm, Booster stays at exactly 0 (it only counts while
-  walking), heading drift 0.05° (~3°/hour).
+## Other lobby tests (2026-10-26)
+Every run ended back about where it started (within ~1 ft / 0.3 m, eyeballed), except `turn_5_left_5_right`
+(~1.5 ft forward-right). End error = distance between the estimated and the real end point, m:
+
+| Run | What | s | Booster | Legs (lowest) | Legs (sole) |
+|---|---|---|---|---|---|
+| `lobby_1025_151300` | 9 / 6 / 12 m out-and-back (tape) | 110 | 0.96 | 0.32 | 0.29 |
+| `lobby_1025_150458` | out-and-back legs | 79 | 0.88 | 0.20 | 0.42 |
+| `turn_5_left_5_right` | 5 turns on the spot, 5 back | 57 | 0.28 | 0.12 | 0.20 |
+| `orientation_stress` | pushed, blocked, turned, stepped in one spot | 81 | 2.59 | 0.18 | 0.46 |
+| `standing` | 67 s standing still | 67 | 0.00 | 0.00 | 0.00 |
+| `continuous_collision` | walking into an obstacle the whole time | 83 | 7.74 | 0.25 | 0.32 |
+| `side_pull` | pulled sideways | 48 | 0.91 | 0.40 | 0.20 |
+
+With the truth good to ~0.3 m, the leg estimates are within that on every run; Booster is off by up to 7.7 m.
+Booster counts steps the robot tries to take, so it keeps "walking" when the robot is blocked or held.
+Heading (IMU, shared by both): -0.4° after 5 turns, -1° after 2300° of turning, 0.05°/min standing.
 
 ## Launch
 ```
